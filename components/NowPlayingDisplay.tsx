@@ -1,0 +1,420 @@
+/* eslint-disable @next/next/no-img-element */
+"use client"
+
+import type { FC } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
+
+interface NowPlayingTrack {
+  id: string
+  padKey: string
+  label: string
+  progress: number
+  duration: number
+  sampleSrc: string
+  chop?: { start: number; end: number }
+}
+
+interface EditMode {
+  padKey: string
+  sampleSrc: string
+}
+
+interface NowPlayingDisplayProps {
+  tracks: NowPlayingTrack[]
+  editMode?: EditMode | null
+  onExitEditMode?: () => void
+  onApplyEdit?: (padKey: string, selection: { start: number; end: number }) => void
+}
+
+const formatPercent = (value: number) => {
+  if (!Number.isFinite(value) || value <= 0) return "0%"
+  return `${Math.min(Math.round(value * 100), 100)}%`
+}
+
+const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: number; end: number } }> = ({ sampleSrc, progress, chop }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const audioBufferRef = useRef<AudioBuffer | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadAudio = async () => {
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const response = await fetch(sampleSrc)
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = await audioContext.decodeAudioData(arrayBuffer)
+
+        audioBufferRef.current = buffer
+        setIsLoading(false)
+        audioContext.close()
+      } catch (error) {
+        console.error("Failed to load audio for waveform:", error)
+        setIsLoading(false)
+      }
+    }
+
+    loadAudio()
+  }, [sampleSrc])
+
+  useEffect(() => {
+    if (!audioBufferRef.current || !canvasRef.current || isLoading) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const width = canvas.width
+    const height = canvas.height
+    const audioBuffer = audioBufferRef.current
+    const data = audioBuffer.getChannelData(0)
+    const step = Math.ceil(data.length / width)
+    const amp = height / 2
+
+    ctx.clearRect(0, 0, width, height)
+
+    // Draw green background only for chopped region
+    if (chop) {
+      const startX = (chop.start / audioBuffer.duration) * width
+      const endX = (chop.end / audioBuffer.duration) * width
+      ctx.fillStyle = "rgba(34, 197, 94, 0.4)"
+      ctx.fillRect(startX, 0, endX - startX, height)
+    }
+
+    // Draw waveform
+    ctx.fillStyle = chop ? "rgba(34, 197, 94, 0.6)" : "rgba(255, 255, 255, 0.15)"
+    for (let i = 0; i < width; i++) {
+      let min = 1.0
+      let max = -1.0
+      for (let j = 0; j < step; j++) {
+        const datum = data[i * step + j]
+        if (datum < min) min = datum
+        if (datum > max) max = datum
+      }
+      ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
+    }
+
+    // Draw progress overlay
+    const progressX = progress * width
+    ctx.fillStyle = "rgba(255, 255, 255, 0.6)"
+    for (let i = 0; i < progressX; i++) {
+      let min = 1.0
+      let max = -1.0
+      for (let j = 0; j < step; j++) {
+        const datum = data[i * step + j]
+        if (datum < min) min = datum
+        if (datum > max) max = datum
+      }
+      ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
+    }
+  }, [isLoading, progress, chop])
+
+  if (isLoading) {
+    return <div className="h-[2vw] w-full rounded-full bg-white/10" />
+  }
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={400}
+      height={60}
+      className="w-full h-[2vw] rounded-[0.3vw]"
+    />
+  )
+}
+
+const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void; onApply: (padKey: string, selection: { start: number; end: number }) => void }> = ({
+  sampleSrc,
+  padKey,
+  onExit,
+  onApply,
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState<number | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  useEffect(() => {
+    const loadAudio = async () => {
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+        audioContextRef.current = audioContext
+
+        const response = await fetch(sampleSrc)
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = await audioContext.decodeAudioData(arrayBuffer)
+
+        setAudioBuffer(buffer)
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Failed to load audio:", error)
+        setIsLoading(false)
+      }
+    }
+
+    loadAudio()
+
+    return () => {
+      audioContextRef.current?.close()
+    }
+  }, [sampleSrc])
+
+  useEffect(() => {
+    if (!audioBuffer || !canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const width = canvas.width
+    const height = canvas.height
+    const data = audioBuffer.getChannelData(0)
+    const step = Math.ceil(data.length / width)
+    const amp = height / 2
+
+    ctx.fillStyle = "rgb(0, 0, 0)"
+    ctx.fillRect(0, 0, width, height)
+
+    // Draw waveform
+    ctx.fillStyle = "rgb(100, 100, 100)"
+    for (let i = 0; i < width; i++) {
+      let min = 1.0
+      let max = -1.0
+      for (let j = 0; j < step; j++) {
+        const datum = data[i * step + j]
+        if (datum < min) min = datum
+        if (datum > max) max = datum
+      }
+      ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
+    }
+
+    // Draw selection with green highlight
+    if (selection) {
+      const startX = (selection.start / audioBuffer.duration) * width
+      const endX = (selection.end / audioBuffer.duration) * width
+      ctx.fillStyle = "rgba(34, 197, 94, 0.3)"
+      ctx.fillRect(startX, 0, endX - startX, height)
+
+      // Draw selection borders
+      ctx.strokeStyle = "rgba(34, 197, 94, 0.8)"
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(startX, 0)
+      ctx.lineTo(startX, height)
+      ctx.moveTo(endX, 0)
+      ctx.lineTo(endX, height)
+      ctx.stroke()
+    }
+  }, [audioBuffer, selection])
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!audioBuffer || !canvasRef.current) return
+
+      const rect = canvasRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const time = (x / rect.width) * audioBuffer.duration
+
+      setIsDragging(true)
+      setDragStart(time)
+      setSelection({ start: time, end: time })
+    },
+    [audioBuffer]
+  )
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!isDragging || !audioBuffer || !canvasRef.current || dragStart === null) return
+
+      const rect = canvasRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const time = (x / rect.width) * audioBuffer.duration
+
+      setSelection({
+        start: Math.min(dragStart, time),
+        end: Math.max(dragStart, time),
+      })
+    },
+    [isDragging, audioBuffer, dragStart]
+  )
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  const handlePlaySelection = useCallback(() => {
+    if (!selection || !sampleSrc) return
+
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+
+    const audio = new Audio(sampleSrc)
+    audioRef.current = audio
+
+    audio.addEventListener('loadedmetadata', () => {
+      audio.currentTime = selection.start
+      setIsPlaying(true)
+    }, { once: true })
+
+    const handleTimeUpdate = () => {
+      if (audio.currentTime >= selection.end) {
+        audio.pause()
+        setIsPlaying(false)
+        audio.removeEventListener('timeupdate', handleTimeUpdate)
+      }
+    }
+
+    const handleEnded = () => {
+      setIsPlaying(false)
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('ended', handleEnded)
+    }
+
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('ended', handleEnded)
+    audio.play()
+  }, [selection, sampleSrc])
+
+  const handleStopPlayback = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+      setIsPlaying(false)
+    }
+  }, [])
+
+  const handleApplyChop = useCallback(() => {
+    if (!selection || !audioBuffer) return
+
+    handleStopPlayback()
+    onApply(padKey, selection)
+  }, [selection, audioBuffer, onApply, padKey, handleStopPlayback])
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
+
+  return (
+    <div className="rounded-[0.68vw] border border-white/20 bg-black/50 p-[1.1vw] text-white shadow-inner">
+      <div className="flex items-center justify-between mb-[0.9vw]">
+        <div className="flex items-center gap-[0.6vw]">
+          <div className="rounded-[0.3vw] bg-white/20 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-semibold tracking-[0.2em]">
+            {padKey.toUpperCase()}
+          </div>
+          <span className="text-[0.7vw] uppercase tracking-[0.15em] text-white/70">Edit Mode</span>
+        </div>
+        <div className="flex gap-[0.6vw]">
+          {selection && (
+            <>
+              {isPlaying ? (
+                <button
+                  onClick={handleStopPlayback}
+                  className="rounded-[0.3vw] bg-red-500/80 hover:bg-red-500 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+                >
+                  STOP
+                </button>
+              ) : (
+                <button
+                  onClick={handlePlaySelection}
+                  className="rounded-[0.3vw] bg-green-500/80 hover:bg-green-500 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+                >
+                  PLAY
+                </button>
+              )}
+              <button
+                onClick={handleApplyChop}
+                className="rounded-[0.3vw] bg-white/20 hover:bg-white/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+              >
+                APPLY
+              </button>
+            </>
+          )}
+          <button
+            onClick={onExit}
+            className="rounded-[0.3vw] bg-white/10 hover:bg-white/20 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+          >
+            EXIT
+          </button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-[3vw] text-[0.75vw] uppercase tracking-[0.2em] text-white/35">
+          Loading...
+        </div>
+      ) : (
+        <div className="relative">
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={200}
+            className="w-full h-[10vw] rounded-[0.4vw] cursor-crosshair"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          />
+          {selection && (
+            <div className="mt-[0.6vw] text-[0.65vw] text-white/50 text-center">
+              Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s (
+              {(selection.end - selection.start).toFixed(3)}s)
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode, onExitEditMode, onApplyEdit }) => {
+  if (editMode && onExitEditMode && onApplyEdit) {
+    return (
+      <WaveformEditor sampleSrc={editMode.sampleSrc} padKey={editMode.padKey} onExit={onExitEditMode} onApply={onApplyEdit} />
+    )
+  }
+  return (
+    <div className="rounded-[0.68vw] border border-white/5 bg-black/35 p-[1.1vw] text-white shadow-inner w-1/3 flex flex-col h-full">
+      <div className="flex items-center justify-between text-[0.65vw] uppercase tracking-[0.3em] opacity-60 flex-shrink-0">
+        <span>Now Playing</span>
+        <span>{tracks.length.toString().padStart(2, "0")}</span>
+      </div>
+      <div className="mt-[0.9vw] grid gap-[0.6vw] overflow-y-auto flex-1 min-h-0">
+        {tracks.length === 0 ? (
+          <div className="flex items-center justify-center rounded-[0.4vw] border border-dashed border-white/10 py-[1.4vw] text-[0.75vw] uppercase tracking-[0.2em] text-white/35">
+            Silence
+          </div>
+        ) : (
+          tracks.map((track) => {
+            const percent = Math.min(track.progress, 1)
+            return (
+              <div key={track.id} className="flex flex-col gap-[0.4vw] min-w-0">
+                <div className="flex items-center justify-between gap-[0.6vw] min-w-0">
+                  <div className="rounded-[0.3vw] bg-white/10 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-semibold tracking-[0.2em] flex-shrink-0">
+                    {track.padKey.toUpperCase()}
+                  </div>
+                  <div className="flex items-center gap-[0.6vw] text-[0.7vw] uppercase tracking-[0.15em] text-white/70 min-w-0 flex-1">
+                    <span className="truncate flex-1">{track.label}</span>
+                    <span className="text-white/50 flex-shrink-0">{formatPercent(percent)}</span>
+                  </div>
+                </div>
+                <MiniWaveform sampleSrc={track.sampleSrc} progress={percent} chop={track.chop} />
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}

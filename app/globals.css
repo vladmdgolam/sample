@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --bg: #ededed;
+  --pad-bg: #BABABA;
+  --dry-wet-text-color: #A6A6A6;
+  --out-size: 20px;
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+  --bg: #393939;
+  --pad-bg: #222222;
+  --dry-wet-text-color: #212121;
+  --shadow-size: 0px;
+  --out-size: 0px;
+}
+
+
+html,
+#next {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg);
+}
+
+.dark body {
+  background-color: transparent;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.grain-texture {
+  background: url(/grain.png) repeat;
+  background-size: 16px;
+  opacity: .06
+}
+
+.te-inner-button {
+  box-shadow: 0 4px 6px 0 rgba(0, 0, 0, .1), 0 0 1px 0 hsla(0, 0%, 88%, .5), 4px 4px 5px 0 hsla(13, 4%, 50%, .1), 1px 6px 8px 0 hsla(15, 3%, 49%, .1), -4px -4px 4px 0 var(--white), 4px -4px 4px 0 var(--white)
+}
+
+.pad {
+  --shadow-size: min(5px, 0.5vw);
+  --shadow-blur: min(10px, 1vw);
+  --light-angle: 35deg;
+  background: var(--bg);
+  box-shadow:
+    calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090,
+    calc(var(--shadow-size) * cos(var(--light-angle) + 180deg)) calc(var(--shadow-size) * sin(var(--light-angle) + 180deg)) var(--shadow-blur) #ffffff4f;
+}
+
+.dark .pad {
+  box-shadow:
+    calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #202020,
+    calc(var(--shadow-size) * cos(var(--light-angle) + 180deg)) calc(var(--shadow-size) * sin(var(--light-angle) + 180deg)) var(--shadow-blur) #4a4a4a4f;
+}
+
+.pad-hovered {
+  --shadow-size: min(2.5px, 0.25vw);
+  --shadow-blur: min(2.5px, 0.25vw);
+}
+
+.pad-playing {
+  --glow: #F8DBCC;
+  --glow-vibrant: #ffcbbd;
+  background: var(--glow);
+  animation: movingLight 2s linear infinite;
+}
+
+.dark .pad-playing {
+  --glow: #bf8a75;
+  --glow-vibrant: #c17864;
+}
+
+.pad-circle {
+  transition: all 0.2s;
+  --light-angle: 215deg;
+  background: var(--bg);
+  --shadow-size: min(4px, 0.4vw);
+  --shadow-blur: min(4px, 0.4vw);
+  box-shadow:
+    inset calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) rgba(144, 144, 144, 0.2),
+    inset calc(var(--shadow-size) * cos(var(--light-angle) + 180deg)) calc(var(--shadow-size) * sin(var(--light-angle) + 180deg)) var(--shadow-blur) rgba(255, 255, 255, 0.2);
+}
+
+.dark .pad-circle {
+  --shadow-size: min(3px, 0.4vw);
+  --shadow-blur: min(2px, 0.4vw);
+  box-shadow:
+    inset calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) rgb(0 0 0 / 40%),
+    inset calc(var(--shadow-size) * cos(var(--light-angle) + 180deg)) calc(var(--shadow-size) * sin(var(--light-angle) + 180deg)) var(--shadow-blur) rgba(255, 255, 255, 0.2);
+}
+
+.pad-circle-static {
+  transition: all 0.2s;
+  --light-angle: 215deg;
+  background: var(--bg);
+  --shadow-size: min(4px, 0.4vw);
+  --shadow-blur: min(4px, 0.4vw);
+  box-shadow:
+    inset calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) rgba(144, 144, 144, 0.2),
+    inset calc(var(--shadow-size) * cos(var(--light-angle) + 180deg)) calc(var(--shadow-size) * sin(var(--light-angle) + 180deg)) var(--shadow-blur) rgba(255, 255, 255, 0.2);
+}
+
+.dark .pad-circle-static {
+  --light-angle: calc(215deg + 180deg);
+  --shadow-size: min(3px, 0.4vw);
+  --shadow-blur: min(2px, 0.4vw);
+  box-shadow:
+    inset calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) rgb(0 0 0 / 40%),
+    inset calc(var(--shadow-size) * cos(var(--light-angle) + 180deg)) calc(var(--shadow-size) * sin(var(--light-angle) + 180deg)) var(--shadow-blur) rgba(255, 255, 255, 0.2);
+}
+
+.pad-circle:hover,
+.pad-circle.active {
+  --light-angle: 35deg;
+  scale: 0.95;
+}
+
+@keyframes movingLight {
+  0% {
+    box-shadow:
+      inset -60px 0 60px var(--glow),
+      inset 60px 0 60px var(--glow-vibrant),
+      0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+  }
+
+  25% {
+    box-shadow:
+      inset 0 -60px 60px var(--glow),
+      inset 0 60px 60px var(--glow-vibrant),
+      0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+  }
+
+  50% {
+    box-shadow:
+      inset 60px 0 60px var(--glow),
+      inset -60px 0 60px var(--glow-vibrant),
+      0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+  }
+
+  75% {
+    box-shadow:
+      inset 0 60px 60px var(--glow),
+      inset 0 -60px 60px var(--glow-vibrant),
+      0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+  }
+
+  100% {
+    box-shadow:
+      inset -60px 0 60px var(--glow),
+      inset 60px 0 60px var(--glow-vibrant),
+      0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+  }
+}
+
+
+.pads_grid {
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 0.42vw;
+  /* Ensure consistent gap in both directions */
+}
+
+/* Ensure the movingLight animation values scale responsively on mobile */
+@media (max-width: 768px) {
+  @keyframes movingLight {
+    0% {
+      box-shadow:
+        inset -30px 0 30px var(--glow),
+        inset 30px 0 30px var(--glow-vibrant),
+        0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+    }
+
+    25% {
+      box-shadow:
+        inset 0 -30px 30px var(--glow),
+        inset 0 30px 30px var(--glow-vibrant),
+        0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+    }
+
+    50% {
+      box-shadow:
+        inset 30px 0 30px var(--glow),
+        inset -30px 0 30px var(--glow-vibrant),
+        0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+    }
+
+    75% {
+      box-shadow:
+        inset 0 30px 30px var(--glow),
+        inset 0 -30px 30px var(--glow-vibrant),
+        0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+    }
+
+    100% {
+      box-shadow:
+        inset -30px 0 30px var(--glow),
+        inset 30px 0 30px var(--glow-vibrant),
+        0px 0px var(--out-size) 0px var(--glow), calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) #909090;
+    }
+  }
+}
