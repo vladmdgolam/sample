@@ -1,20 +1,13 @@
+// 4x4 grid mapped to keyboard layout:
+// [1] [2] [3] [4]
+// [Q] [W] [E] [R]
+// [A] [S] [D] [F]
+// [Z] [X] [C] [V]
 export const padKeys = [
-  "4",
-  "5",
-  "6",
-  "7",
-  "r",
-  "t",
-  "y",
-  "u",
-  "f",
-  "g",
-  "h",
-  "j",
-  "c",
-  "v",
-  "b",
-  "n",
+  "1", "2", "3", "4",
+  "q", "w", "e", "r",
+  "a", "s", "d", "f",
+  "z", "x", "c", "v",
 ]
 
 export const allKeys = [
@@ -69,15 +62,9 @@ export const allKeys = [
   "=",
 ]
 
-export const keyToPadMapping = allKeys.reduce((acc, key) => {
-  if (padKeys.includes(key)) {
-    // Keep original mapping for padKeys
-    acc[key] = key
-  } else {
-    // Assign other keys to pads randomly
-    const randomPadKey = padKeys[Math.floor(Math.random() * padKeys.length)]
-    acc[key] = randomPadKey
-  }
+// Direct 1:1 mapping - each pad key triggers itself
+export const keyToPadMapping = padKeys.reduce((acc, key) => {
+  acc[key] = key
   return acc
 }, {} as Record<string, string>)
 
