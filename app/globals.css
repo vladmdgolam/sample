@@ -3,30 +3,56 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 200, 200, 200;
-  --background-end-rgb: 180, 180, 180;
-  --page-bg: #6a6a6a;
-  --container-bg: #c8c8c8;
-  --bg: #7a7a7a;
-  --pad-bg: #c8c8c8;
-  --lcd-bg: #1a2b1a;
-  --lcd-text: #4ade80;
-  --lcd-text-dim: #2d5a2d;
-  --out-size: 8px;
+  /* MPC60 Colors */
+  --c-chassis-main: #CDCBC9;
+  --c-chassis-dark: #B0B4B5;
+  --c-armrest: #1A1A1A;
+
+  --c-pad-rubber: #8C8C8C;
+  --c-btn-light: #EBEBEB;
+  --c-btn-slate: #536775;
+  --c-btn-red: #D9381E;
+
+  --c-lcd-bg: #005F48;
+  --c-lcd-bezel: #333333;
+  --c-lcd-text: #7FFFB2;
+  --c-lcd-text-dim: #3D8C6A;
+
+  --c-text-dark: #2B2B2B;
+  --c-accent-red: #C21F1F;
+
+  /* Radii */
+  --r-pad: 4px;
+  --r-btn: 2px;
+
+  /* Shadows */
+  --shadow-btn: 1px 1px 2px rgba(0,0,0,0.25), -1px -1px 1px rgba(255,255,255,0.4);
+  --shadow-pad-inset: inset 0px 2px 4px rgba(0,0,0,0.4), inset 0px -1px 2px rgba(255,255,255,0.1);
+
+  /* Legacy mappings */
+  --page-bg: #fff;
+  --container-bg: var(--c-chassis-main);
+  --bg: var(--c-pad-rubber);
+  --lcd-bg: var(--c-lcd-bg);
+  --lcd-text: var(--c-lcd-text);
+  --lcd-text-dim: var(--c-lcd-text-dim);
+  --out-size: 6px;
 }
 
 .dark {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 30, 30, 30;
-  --background-end-rgb: 20, 20, 20;
-  --page-bg: #1a1a1a;
-  --container-bg: #2a2a2a;
-  --bg: #4a4a4a;
-  --pad-bg: #2a2a2a;
-  --lcd-bg: #0a1a0a;
-  --lcd-text: #4ade80;
-  --lcd-text-dim: #1a3a1a;
+  --c-chassis-main: #2A2A2A;
+  --c-chassis-dark: #1A1A1A;
+  --c-pad-rubber: #4A4A4A;
+  --c-lcd-bg: #003D2E;
+  --c-lcd-text: #5FDF92;
+  --c-lcd-text-dim: #2D6C4A;
+
+  --page-bg: #1A1A1A;
+  --container-bg: var(--c-chassis-main);
+  --bg: var(--c-pad-rubber);
+  --lcd-bg: var(--c-lcd-bg);
+  --lcd-text: var(--c-lcd-text);
+  --lcd-text-dim: var(--c-lcd-text-dim);
   --shadow-size: 0px;
   --out-size: 4px;
 }
@@ -64,36 +90,29 @@ body {
 }
 
 .pad {
-  --shadow-size: min(3px, 0.3vw);
-  --shadow-blur: min(6px, 0.6vw);
-  --light-angle: 35deg;
-  background: var(--bg);
-  border: 1px solid rgba(0,0,0,0.2);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    inset 0 -2px 4px rgba(0,0,0,0.2),
-    calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) rgba(0,0,0,0.3);
+  background: var(--c-pad-rubber);
+  border-radius: var(--r-pad);
+  border: 1px solid rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-pad-inset), var(--shadow-btn);
+  transition: all 0.1s ease;
 }
 
 .dark .pad {
-  border: 1px solid rgba(0,0,0,0.4);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.05),
-    inset 0 -2px 4px rgba(0,0,0,0.4),
-    calc(var(--shadow-size) * cos(var(--light-angle))) calc(var(--shadow-size) * sin(var(--light-angle))) var(--shadow-blur) rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-pad-inset), 1px 1px 3px rgba(0,0,0,0.4);
 }
 
 .pad-hovered {
-  --shadow-size: min(1.5px, 0.15vw);
-  --shadow-blur: min(3px, 0.3vw);
-  filter: brightness(1.05);
+  filter: brightness(1.08);
+  transform: scale(0.98);
+  box-shadow: var(--shadow-pad-inset);
 }
 
 .pad-playing {
   --glow: #f59e0b;
   --glow-vibrant: #fbbf24;
   background: linear-gradient(135deg, var(--glow) 0%, var(--glow-vibrant) 100%);
-  animation: mpcGlow 0.5s ease-in-out infinite alternate;
+  animation: mpcGlow 0.4s ease-in-out infinite alternate;
   border-color: #b45309;
 }
 

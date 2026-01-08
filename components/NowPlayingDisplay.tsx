@@ -76,12 +76,12 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
     if (chop) {
       const startX = (chop.start / audioBuffer.duration) * width
       const endX = (chop.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(74, 222, 128, 0.2)"
+      ctx.fillStyle = "rgba(127, 255, 178, 0.2)"
       ctx.fillRect(startX, 0, endX - startX, height)
     }
 
-    // Draw waveform in LCD green
-    ctx.fillStyle = chop ? "rgba(74, 222, 128, 0.4)" : "rgba(74, 222, 128, 0.25)"
+    // Draw waveform in LCD green (--c-lcd-text: #7FFFB2)
+    ctx.fillStyle = chop ? "rgba(127, 255, 178, 0.4)" : "rgba(127, 255, 178, 0.25)"
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
@@ -93,9 +93,9 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
-    // Draw progress overlay in bright LCD green
+    // Draw progress overlay in bright LCD green (--c-lcd-text: #7FFFB2)
     const progressX = progress * width
-    ctx.fillStyle = "rgba(74, 222, 128, 0.9)"
+    ctx.fillStyle = "rgba(127, 255, 178, 0.9)"
     for (let i = 0; i < progressX; i++) {
       let min = 1.0
       let max = -1.0
@@ -177,11 +177,12 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const step = Math.ceil(data.length / width)
     const amp = height / 2
 
-    ctx.fillStyle = "rgb(0, 0, 0)"
+    // Dark LCD background
+    ctx.fillStyle = "#002F24"
     ctx.fillRect(0, 0, width, height)
 
-    // Draw waveform
-    ctx.fillStyle = "rgb(100, 100, 100)"
+    // Draw waveform in dim LCD green (--c-lcd-text-dim: #3D8C6A)
+    ctx.fillStyle = "#3D8C6A"
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
@@ -193,15 +194,15 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
-    // Draw selection with green highlight
+    // Draw selection with LCD green highlight (#7FFFB2)
     if (selection) {
       const startX = (selection.start / audioBuffer.duration) * width
       const endX = (selection.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(34, 197, 94, 0.3)"
+      ctx.fillStyle = "rgba(127, 255, 178, 0.3)"
       ctx.fillRect(startX, 0, endX - startX, height)
 
       // Draw selection borders
-      ctx.strokeStyle = "rgba(34, 197, 94, 0.8)"
+      ctx.strokeStyle = "rgba(127, 255, 178, 0.8)"
       ctx.lineWidth = 2
       ctx.beginPath()
       ctx.moveTo(startX, 0)
@@ -315,13 +316,13 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   }, [])
 
   return (
-    <div className="rounded-[0.68vw] border border-white/20 bg-black/50 p-[1.1vw] text-white shadow-inner">
+    <div className="rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1.1vw] text-[var(--lcd-text)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]">
       <div className="flex items-center justify-between mb-[0.9vw]">
         <div className="flex items-center gap-[0.6vw]">
-          <div className="rounded-[0.3vw] bg-white/20 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-semibold tracking-[0.2em]">
+          <div className="rounded-[0.3vw] bg-[var(--lcd-text)]/20 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-mono font-semibold tracking-[0.2em]">
             {padKey.toUpperCase()}
           </div>
-          <span className="text-[0.7vw] uppercase tracking-[0.15em] text-white/70">Edit Mode</span>
+          <span className="text-[0.7vw] uppercase tracking-[0.15em] text-[var(--lcd-text-dim)] font-mono">Edit Mode</span>
         </div>
         <div className="flex gap-[0.6vw]">
           {selection && (
@@ -329,21 +330,21 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
               {isPlaying ? (
                 <button
                   onClick={handleStopPlayback}
-                  className="rounded-[0.3vw] bg-red-500/80 hover:bg-red-500 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+                  className="rounded-[var(--r-btn)] bg-[var(--c-btn-red)] hover:brightness-110 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-all text-white"
                 >
                   STOP
                 </button>
               ) : (
                 <button
                   onClick={handlePlaySelection}
-                  className="rounded-[0.3vw] bg-green-500/80 hover:bg-green-500 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+                  className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/80 hover:bg-[var(--lcd-text)] px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--c-lcd-bg)]"
                 >
                   PLAY
                 </button>
               )}
               <button
                 onClick={handleApplyChop}
-                className="rounded-[0.3vw] bg-white/20 hover:bg-white/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+                className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/20 hover:bg-[var(--lcd-text)]/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
               >
                 APPLY
               </button>
@@ -351,7 +352,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
           )}
           <button
             onClick={onExit}
-            className="rounded-[0.3vw] bg-white/10 hover:bg-white/20 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-semibold tracking-[0.15em] transition-colors"
+            className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/10 hover:bg-[var(--lcd-text)]/20 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
           >
             EXIT
           </button>
@@ -359,7 +360,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-[3vw] text-[0.75vw] uppercase tracking-[0.2em] text-white/35">
+        <div className="flex items-center justify-center py-[3vw] text-[0.75vw] uppercase tracking-[0.2em] text-[var(--lcd-text-dim)] font-mono">
           Loading...
         </div>
       ) : (
@@ -377,14 +378,14 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
           {/* Playhead indicator */}
           {playbackPosition !== null && (
             <div
-              className="absolute top-0 h-[10vw] w-[2px] bg-white pointer-events-none"
+              className="absolute top-0 h-[10vw] w-[2px] bg-[var(--lcd-text)] pointer-events-none"
               style={{ left: `${playbackPosition * 100}%` }}
             >
-              <div className="absolute -top-[0.3vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.3vw] border-r-[0.3vw] border-t-[0.4vw] border-l-transparent border-r-transparent border-t-white" />
+              <div className="absolute -top-[0.3vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.3vw] border-r-[0.3vw] border-t-[0.4vw] border-l-transparent border-r-transparent border-t-[var(--lcd-text)]" />
             </div>
           )}
           {selection && (
-            <div className="mt-[0.6vw] text-[0.65vw] text-white/50 text-center">
+            <div className="mt-[0.6vw] text-[0.65vw] text-[var(--lcd-text-dim)] text-center font-mono">
               Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s (
               {(selection.end - selection.start).toFixed(3)}s)
             </div>
@@ -405,7 +406,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
   }
   return (
     <div className="hidden md:block relative">
-      <div className="absolute inset-0 rounded-[0.4vw] border-2 border-black/40 bg-[var(--lcd-bg)] p-[1vw] shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
+      <div className="absolute inset-0 rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1vw] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between text-[0.6vw] uppercase tracking-[0.2em] text-[var(--lcd-text)] font-mono flex-shrink-0">
           <span>NOW PLAYING</span>
           <span>{tracks.length.toString().padStart(2, "0")}</span>
