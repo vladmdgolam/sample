@@ -10,10 +10,12 @@ interface PadProps {
   triggerKeys: string[]
   showTips: boolean
   sampleSrc: string
+  customSampleName?: string
   chop?: { start: number; end: number }
   onTrackStart?: (payload: { id: string; padKey: string; sampleSrc: string; audio: HTMLAudioElement }) => void
   onTrackEnd?: (id: string) => void
   onEnterEditMode?: (padKey: string, sampleSrc: string) => void
+  onFileDrop?: (padKey: string, file: File) => void
 }
 
 interface ActiveAudio {
@@ -34,13 +36,16 @@ const PadComponent: React.FC<PadProps> = ({
   triggerKeys,
   showTips,
   sampleSrc,
+  customSampleName,
   chop,
   onTrackStart,
   onTrackEnd,
   onEnterEditMode,
+  onFileDrop,
 }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const glowRef = useRef<HTMLDivElement>(null)
   const padRef = useRef<HTMLDivElement>(null)
@@ -181,6 +186,31 @@ const PadComponent: React.FC<PadProps> = ({
     onEnterEditMode?.(padKey, sampleSrc)
   }, [padKey, sampleSrc, onEnterEditMode])
 
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    const audioFile = files.find((f) => f.type.startsWith("audio/") || f.name.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i))
+
+    if (audioFile && onFileDrop) {
+      onFileDrop(padKey, audioFile)
+    }
+  }, [padKey, onFileDrop])
+
   return (
     <div
       className="center flex flex-col z-30 aspect-square w-full h-full"
@@ -189,6 +219,9 @@ const PadComponent: React.FC<PadProps> = ({
       onMouseMove={handleMouseMove}
       onClick={triggerSample}
       onContextMenu={handleContextMenu}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       ref={padRef}
     >
       <motion.div
@@ -197,6 +230,7 @@ const PadComponent: React.FC<PadProps> = ({
           {
             "pad-hovered": isHovered,
             "pad-playing": isPlaying,
+            "ring-2 ring-green-500 ring-inset": isDragOver,
           }
         )}
         animate={{
@@ -205,14 +239,24 @@ const PadComponent: React.FC<PadProps> = ({
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {showTips && (
-          <div className="grid h-full place-content-center text-white">
-            <span className="text-[1vw] font-bold opacity-80 text-center">{padKey.toUpperCase()}</span>
-            <span className="text-[0.6vw] opacity-50 text-center">{triggerKeys.join(", ")}</span>
+          <div className="grid h-full place-content-center text-black/60">
+            <span className="text-[1vw] font-bold text-center">{padKey.toUpperCase()}</span>
+            <span className="text-[0.6vw] opacity-70 text-center">{triggerKeys.join(", ")}</span>
           </div>
         )}
         {chop && (
           <div className="absolute top-[0.3vw] right-[0.3vw] bg-green-500/80 text-white px-[0.4vw] py-[0.1vw] rounded-[0.2vw] text-[0.5vw] font-semibold uppercase tracking-wider">
             Chopped
+          </div>
+        )}
+        {customSampleName && (
+          <div className="absolute bottom-[0.3vw] left-[0.3vw] right-[0.3vw] bg-black/60 text-white px-[0.4vw] py-[0.15vw] rounded-[0.2vw] text-[0.5vw] font-medium truncate text-center">
+            {customSampleName}
+          </div>
+        )}
+        {isDragOver && (
+          <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+            <span className="text-[0.8vw] font-semibold text-green-400">Drop audio</span>
           </div>
         )}
         <motion.div

@@ -40,6 +40,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
   const [playingTracks, setPlayingTracks] = useState<PlayingTrack[]>([])
   const [editMode, setEditMode] = useState<{ padKey: string; sampleSrc: string } | null>(null)
   const [sampleChops, setSampleChops] = useState<Record<string, { start: number; end: number }>>({})
+  const [customSamples, setCustomSamples] = useState<Record<string, { url: string; name: string }>>({})
   const trackListeners = useRef<Map<string, TrackListener>>(new Map())
 
   // Memoize trigger keys mapping to prevent recreating arrays on every render
@@ -165,6 +166,20 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     setEditMode({ padKey, sampleSrc })
   }, [])
 
+  const handleFileDrop = useCallback((padKey: string, file: File) => {
+    const url = URL.createObjectURL(file)
+    const name = file.name.replace(/\.[^/.]+$/, "") // Remove extension
+    setCustomSamples((prev) => ({
+      ...prev,
+      [padKey]: { url, name },
+    }))
+    // Clear any existing chop for this pad since it's a new sample
+    setSampleChops((prev) => {
+      const { [padKey]: _, ...rest } = prev
+      return rest
+    })
+  }, [])
+
   const handleExitEditMode = useCallback(() => {
     setEditMode(null)
   }, [])
@@ -231,19 +246,24 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
         />
         {!editMode && <div className="flex flex-col gap-[0.42vw] flex-1 min-h-0">
           <div className="grid grid-cols-4 pads_grid">
-            {padKeys.map((key, index) => (
-              <Pad
-                key={index}
-                padKey={key}
-                triggerKeys={padToTriggerKeys[key]}
-                showTips={showTips}
-                sampleSrc={padSamples[key]}
-                chop={sampleChops[key]}
-                onTrackStart={handleTrackStart}
-                onTrackEnd={handleTrackEnd}
-                onEnterEditMode={handleEnterEditMode}
-              />
-            ))}
+            {padKeys.map((key, index) => {
+              const custom = customSamples[key]
+              return (
+                <Pad
+                  key={index}
+                  padKey={key}
+                  triggerKeys={padToTriggerKeys[key]}
+                  showTips={showTips}
+                  sampleSrc={custom?.url ?? padSamples[key]}
+                  customSampleName={custom?.name}
+                  chop={sampleChops[key]}
+                  onTrackStart={handleTrackStart}
+                  onTrackEnd={handleTrackEnd}
+                  onEnterEditMode={handleEnterEditMode}
+                  onFileDrop={handleFileDrop}
+                />
+              )
+            })}
           </div>
           <div className="grid grid-cols-3 gap-[0.42vw]">
             <div className="grid dark:opacity-35 place-content-center">
