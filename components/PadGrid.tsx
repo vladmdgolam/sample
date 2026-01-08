@@ -267,7 +267,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-[2.5%] bg-[var(--container-bg)] max-w-full relative rounded-[0.5vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-[1.5vw]">
+      <div className="p-[2.5%] pb-[1.5%] bg-[var(--container-bg)] max-w-full relative rounded-[0.5vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-[1.5vw]">
         <NowPlayingDisplay
           tracks={playingTracks}
           editMode={editMode}
@@ -296,6 +296,21 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
             })}
           </div>
         </div>}
+        {/* Credits */}
+        <div className="hidden md:block" /> {/* Spacer for first column */}
+        <div className="text-left text-[0.75vw] text-[var(--c-text-dark)] opacity-60 pt-[0.5vw]">
+          Samples: <a
+            href="https://drumboii.com/products/free-808-sample-pack"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80 transition-opacity"
+          >808 Pack by DRUMBOII</a> • Made by <a
+            href="https://vladik.xyz/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80 transition-opacity"
+          >Vlad</a>
+        </div>
       </div>
     </div>
   )
