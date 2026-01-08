@@ -15,7 +15,7 @@ interface PadProps {
   onTrackStart?: (payload: { id: string; padKey: string; sampleSrc: string; audio: HTMLAudioElement }) => void
   onTrackEnd?: (id: string) => void
   onEnterEditMode?: (padKey: string, sampleSrc: string) => void
-  onFileDrop?: (padKey: string, file: File) => void
+  onFileDrop?: (padKey: string, files: File[]) => void
 }
 
 interface ActiveAudio {
@@ -204,10 +204,10 @@ const PadComponent: React.FC<PadProps> = ({
     setIsDragOver(false)
 
     const files = Array.from(e.dataTransfer.files)
-    const audioFile = files.find((f) => f.type.startsWith("audio/") || f.name.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i))
+    const audioFiles = files.filter((f) => f.type.startsWith("audio/") || f.name.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i))
 
-    if (audioFile && onFileDrop) {
-      onFileDrop(padKey, audioFile)
+    if (audioFiles.length > 0 && onFileDrop) {
+      onFileDrop(padKey, audioFiles)
     }
   }, [padKey, onFileDrop])
 

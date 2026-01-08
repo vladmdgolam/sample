@@ -166,22 +166,50 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     setEditMode({ padKey, sampleSrc })
   }, [])
 
-  const handleFileDrop = useCallback((padKey: string, file: File) => {
-    const url = URL.createObjectURL(file)
-    const name = file.name.replace(/\.[^/.]+$/, "") // Remove extension
+  const handleFileDrop = useCallback((startPadKey: string, files: File[]) => {
+    const startIndex = padKeys.indexOf(startPadKey)
+    if (startIndex === -1) return
+
+    const newCustomSamples: Record<string, { url: string; name: string }> = {}
+    const chopsToRemove: string[] = []
+
+    files.forEach((file, i) => {
+      const targetIndex = startIndex + i
+      if (targetIndex < padKeys.length) {
+        const targetPadKey = padKeys[targetIndex]
+        const url = URL.createObjectURL(file)
+        const name = file.name.replace(/\.[^/.]+$/, "") // Remove extension
+        newCustomSamples[targetPadKey] = { url, name }
+        chopsToRemove.push(targetPadKey)
+      }
+    })
+
     setCustomSamples((prev) => ({
       ...prev,
-      [padKey]: { url, name },
+      ...newCustomSamples,
     }))
-    // Clear any existing chop for this pad since it's a new sample
+
+    // Clear any existing chops for the affected pads
     setSampleChops((prev) => {
-      const { [padKey]: _, ...rest } = prev
-      return rest
+      const updated = { ...prev }
+      chopsToRemove.forEach((key) => delete updated[key])
+      return updated
     })
-  }, [])
+  }, [padKeys])
 
   const handleExitEditMode = useCallback(() => {
     setEditMode(null)
+  }, [])
+
+  // Prevent browser from opening files when dragging over the grid
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
   }, [])
 
   const handleApplyEdit = useCallback(
@@ -236,6 +264,8 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       className={classNames("basis-[100vw]", {
         "md:basis-[50vw]": !isDark,
       })}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <div className="p-[1.7%] pb-[1.7%] bg-[var(--pad-bg)] h-full max-w-full relative rounded-[0.84vw] flex gap-[0.84vw]">
         <NowPlayingDisplay
