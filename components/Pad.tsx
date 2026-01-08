@@ -198,13 +198,70 @@ const PadComponent: React.FC<PadProps> = ({
     setIsDragOver(false)
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragOver(false)
 
-    const files = Array.from(e.dataTransfer.files)
-    const audioFiles = files.filter((f) => f.type.startsWith("audio/") || f.name.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i))
+    const items = Array.from(e.dataTransfer.items)
+    const audioFiles: File[] = []
+
+    const isAudioFile = (name: string) => /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(name)
+
+    const readDirectory = async (entry: FileSystemDirectoryEntry): Promise<File[]> => {
+      const files: File[] = []
+      const reader = entry.createReader()
+
+      const readEntries = (): Promise<FileSystemEntry[]> => {
+        return new Promise((resolve, reject) => {
+          reader.readEntries(resolve, reject)
+        })
+      }
+
+      const getFile = (fileEntry: FileSystemFileEntry): Promise<File> => {
+        return new Promise((resolve, reject) => {
+          fileEntry.file(resolve, reject)
+        })
+      }
+
+      let entries = await readEntries()
+      while (entries.length > 0) {
+        for (const entry of entries) {
+          if (entry.isFile && isAudioFile(entry.name)) {
+            const file = await getFile(entry as FileSystemFileEntry)
+            files.push(file)
+          } else if (entry.isDirectory) {
+            const subFiles = await readDirectory(entry as FileSystemDirectoryEntry)
+            files.push(...subFiles)
+          }
+        }
+        entries = await readEntries()
+      }
+
+      return files
+    }
+
+    for (const item of items) {
+      const entry = item.webkitGetAsEntry?.()
+      if (entry) {
+        if (entry.isDirectory) {
+          const folderFiles = await readDirectory(entry as FileSystemDirectoryEntry)
+          audioFiles.push(...folderFiles)
+        } else if (entry.isFile && isAudioFile(entry.name)) {
+          const file = item.getAsFile()
+          if (file) audioFiles.push(file)
+        }
+      } else {
+        // Fallback for browsers without webkitGetAsEntry
+        const file = item.getAsFile()
+        if (file && (file.type.startsWith("audio/") || isAudioFile(file.name))) {
+          audioFiles.push(file)
+        }
+      }
+    }
+
+    // Sort by filename for consistent ordering
+    audioFiles.sort((a, b) => a.name.localeCompare(b.name))
 
     if (audioFiles.length > 0 && onFileDrop) {
       onFileDrop(padKey, audioFiles)
