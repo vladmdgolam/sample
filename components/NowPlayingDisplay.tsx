@@ -404,7 +404,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
     )
   }
   return (
-    <div className="relative">
+    <div className="hidden md:block">
       <div className="absolute inset-0 rounded-[0.4vw] border-2 border-black/40 bg-[var(--lcd-bg)] p-[1vw] shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between text-[0.6vw] uppercase tracking-[0.2em] text-[var(--lcd-text)] font-mono flex-shrink-0">
           <span>NOW PLAYING</span>
