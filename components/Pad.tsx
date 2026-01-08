@@ -306,9 +306,9 @@ const PadComponent: React.FC<PadProps> = ({
             CHOPPED
           </div>
         )}
-        {customSampleName && (
+        {(showTips || customSampleName) && (
           <div className="absolute bottom-[0.3vw] left-[0.3vw] right-[0.3vw] bg-black/70 text-white/90 px-[0.4vw] py-[0.15vw] rounded-[0.15vw] text-[0.45vw] font-mono truncate text-center">
-            {customSampleName}
+            {customSampleName || sampleSrc.split("/").pop()?.replace(/\.[^/.]+$/, "")}
           </div>
         )}
         {isDragOver && (

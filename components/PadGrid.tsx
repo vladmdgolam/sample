@@ -267,14 +267,14 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-[1.7%] pb-[1.7%] bg-[var(--container-bg)] max-w-full relative rounded-[0.84vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-[0.84vw]">
+      <div className="p-[2.5%] bg-[var(--container-bg)] max-w-full relative rounded-[0.5vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-[1.5vw]">
         <NowPlayingDisplay
           tracks={playingTracks}
           editMode={editMode}
           onExitEditMode={handleExitEditMode}
           onApplyEdit={handleApplyEdit}
         />
-        {!editMode && <div className="flex flex-col gap-[0.42vw] min-h-0">
+        {!editMode && <div className="flex flex-col gap-[0.6vw] min-h-0">
           <div className="grid grid-cols-4 pads_grid">
             {padKeys.map((key, index) => {
               const custom = customSamples[key]

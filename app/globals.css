@@ -182,7 +182,7 @@ body {
 
 .pads_grid {
   grid-template-rows: repeat(4, minmax(0, 1fr));
-  gap: 0.42vw;
+  gap: 0.6vw;
   /* Ensure consistent gap in both directions */
 }
 

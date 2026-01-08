@@ -84,26 +84,66 @@ export const keyToPadMapping = allKeys.reduce((acc, key) => {
 export const glowSize = 50
 
 export const sampleFiles = [
-  "samples/kid-be-kid/BD .wav",
-  "samples/kid-be-kid/HH beatbox chorus.wav",
-  "samples/kid-be-kid/HH prechorus beatbox.wav",
-  "samples/kid-be-kid/PIANO.wav",
-  "samples/kid-be-kid/SN.wav",
-  "samples/kid-be-kid/arp.wav",
-  "samples/kid-be-kid/bank2 73 blubber2.wav",
-  "samples/kid-be-kid/bank2 74 chime.wav",
-  "samples/kid-be-kid/bank2 77 hammond glas.wav",
-  "samples/kid-be-kid/bank2 82 filter chant.wav",
-  "samples/kid-be-kid/bank2 88 forbitten planet.wav",
-  "samples/kid-be-kid/bass.wav",
-  "samples/kid-be-kid/beat verb.wav",
-  "samples/kid-be-kid/leadvocals fx.wav",
-  "samples/kid-be-kid/leadvocals.wav",
-  "samples/kid-be-kid/vocals 2.wav",
+  "samples/808/DRUMBOII_808_BOOM.wav",
+  "samples/808/DRUMBOII_808_CRUNCH.wav",
+  "samples/808/DRUMBOII_808_DEEP.wav",
+  "samples/808/DRUMBOII_808_SHORT.wav",
+  "samples/808/DRUMBOII_BELL_BASIC.wav",
+  "samples/808/DRUMBOII_BELL_DETUNE.wav",
+  "samples/808/DRUMBOII_CLAP_FLOAT.wav",
+  "samples/808/DRUMBOII_CLAP_LONG.wav",
+  "samples/808/DRUMBOII_CLAP_SMACK.wav",
+  "samples/808/DRUMBOII_CLAP_SNAP.wav",
+  "samples/808/DRUMBOII_CLAVE_HIGH.wav",
+  "samples/808/DRUMBOII_CLAVE_NICE.wav",
+  "samples/808/DRUMBOII_CLAVE_OK.wav",
+  "samples/808/DRUMBOII_CRASH_DARK.wav",
+  "samples/808/DRUMBOII_CRASH_FUN.wav",
+  "samples/808/DRUMBOII_CRASH_SLOPE.wav",
+  "samples/808/DRUMBOII_CRASH_WEAK.wav",
+  "samples/808/DRUMBOII_HAT_DARK.wav",
+  "samples/808/DRUMBOII_HAT_FLYING.wav",
+  "samples/808/DRUMBOII_HAT_FUN.wav",
+  "samples/808/DRUMBOII_HAT_OPEN.wav",
+  "samples/808/DRUMBOII_HAT_TINY.wav",
+  "samples/808/DRUMBOII_KICK_808.wav",
+  "samples/808/DRUMBOII_KICK_808_AGAIN.wav",
+  "samples/808/DRUMBOII_KICK_BASIC.wav",
+  "samples/808/DRUMBOII_KICK_DISTORTED.wav",
+  "samples/808/DRUMBOII_KICK_FM.wav",
+  "samples/808/DRUMBOII_KICK_MUFFLED.wav",
+  "samples/808/DRUMBOII_KICK_THUD.wav",
+  "samples/808/DRUMBOII_SNARE_BASIC.wav",
+  "samples/808/DRUMBOII_SNARE_DEEP.wav",
+  "samples/808/DRUMBOII_SNARE_DONG.wav",
+  "samples/808/DRUMBOII_SNARE_WOW.wav",
+  "samples/808/DRUMBOII_TOM_DRAFT.wav",
+  "samples/808/DRUMBOII_TOM_FLOPPY.wav",
+  "samples/808/DRUMBOII_TOM_HIGH.wav",
+  "samples/808/DRUMBOII_TOM_LOW.wav",
+  "samples/808/DRUMBOII_TOM_MIDDLE.wav",
+  "samples/808/DRUMBOII_TOM_OVERDRIVE.wav",
+  "samples/808/DRUMBOII_TOM_REVERB.wav",
+  "samples/808/DRUMBOII_TOM_STIFF.wav",
+  "samples/808/DRUMBOII_TOM_UGH.wav",
+  "samples/808/DRUMBOII_TOM_UNUSABLE.wav",
+  "samples/808/DRUMBOII_TOM_WOOD.wav",
 ]
 
+// Shuffle array using Fisher-Yates algorithm
+const shuffleArray = <T>(array: T[]): T[] => {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
+// Randomly assign samples to pads (shuffled each time app loads)
+const shuffledSamples = shuffleArray(sampleFiles)
+
 export const padSamples = padKeys.reduce((acc, key, index) => {
-  const sample = sampleFiles[index % sampleFiles.length]
-  acc[key] = sample
+  acc[key] = shuffledSamples[index % shuffledSamples.length]
   return acc
 }, {} as Record<string, string>)
