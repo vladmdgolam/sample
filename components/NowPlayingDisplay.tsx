@@ -113,12 +113,23 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={400}
-      height={60}
-      className="w-full h-[1.5vw] rounded-[0.2vw]"
-    />
+    <div className="relative w-full h-[1.5vw]">
+      <canvas
+        ref={canvasRef}
+        width={400}
+        height={60}
+        className="w-full h-full rounded-[0.2vw]"
+      />
+      {/* Playhead indicator */}
+      {progress > 0 && progress < 1 && (
+        <div
+          className="absolute top-0 h-full w-[1px] bg-[var(--lcd-text)] pointer-events-none"
+          style={{ left: `${progress * 100}%` }}
+        >
+          <div className="absolute -top-[0.15vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.15vw] border-r-[0.15vw] border-t-[0.2vw] border-l-transparent border-r-transparent border-t-[var(--lcd-text)]" />
+        </div>
+      )}
+    </div>
   )
 }
 
