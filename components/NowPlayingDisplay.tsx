@@ -398,18 +398,19 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
 export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode, onExitEditMode, onApplyEdit }) => {
   if (editMode && onExitEditMode && onApplyEdit) {
     return (
-      <div className="flex-1">
+      <div className="col-span-2">
         <WaveformEditor sampleSrc={editMode.sampleSrc} padKey={editMode.padKey} onExit={onExitEditMode} onApply={onApplyEdit} />
       </div>
     )
   }
   return (
-    <div className="rounded-[0.68vw] border border-white/5 bg-black/35 p-[1.1vw] text-white shadow-inner w-1/3 flex flex-col h-full">
-      <div className="flex items-center justify-between text-[0.65vw] uppercase tracking-[0.3em] opacity-60 flex-shrink-0">
-        <span>Now Playing</span>
-        <span>{tracks.length.toString().padStart(2, "0")}</span>
-      </div>
-      <div className="mt-[0.9vw] grid gap-[0.6vw] overflow-y-auto flex-1 min-h-0">
+    <div className="relative">
+      <div className="absolute inset-0 rounded-[0.68vw] border border-white/5 bg-black/35 p-[1.1vw] text-white shadow-inner flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between text-[0.65vw] uppercase tracking-[0.3em] opacity-60 flex-shrink-0">
+          <span>Now Playing</span>
+          <span>{tracks.length.toString().padStart(2, "0")}</span>
+        </div>
+        <div className="mt-[0.9vw] grid gap-[0.6vw] overflow-y-auto flex-1 min-h-0">
         {tracks.length === 0 ? (
           <div className="flex items-center justify-center rounded-[0.4vw] border border-dashed border-white/10 py-[1.4vw] text-[0.75vw] uppercase tracking-[0.2em] text-white/35">
             Silence
@@ -433,6 +434,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
             )
           })
         )}
+        </div>
       </div>
     </div>
   )
