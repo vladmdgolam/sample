@@ -287,7 +287,7 @@ const PadComponent: React.FC<PadProps> = ({
           {
             "pad-hovered": isHovered,
             "pad-playing": isPlaying,
-            "ring-2 ring-green-500 ring-inset": isDragOver,
+            "ring-2 ring-amber-400 ring-inset": isDragOver,
           }
         )}
         animate={{
@@ -296,24 +296,24 @@ const PadComponent: React.FC<PadProps> = ({
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {showTips && (
-          <div className="grid h-full place-content-center text-black/60">
-            <span className="text-[1vw] font-bold text-center">{padKey.toUpperCase()}</span>
-            <span className="text-[0.6vw] opacity-70 text-center">{triggerKeys.join(", ")}</span>
+          <div className="grid h-full place-content-center text-white/70">
+            <span className="text-[1vw] font-bold text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">{padKey.toUpperCase()}</span>
+            <span className="text-[0.5vw] opacity-60 text-center">{triggerKeys.join(", ")}</span>
           </div>
         )}
         {chop && (
-          <div className="absolute top-[0.3vw] right-[0.3vw] bg-green-500/80 text-white px-[0.4vw] py-[0.1vw] rounded-[0.2vw] text-[0.5vw] font-semibold uppercase tracking-wider">
-            Chopped
+          <div className="absolute top-[0.3vw] right-[0.3vw] bg-amber-500/90 text-black px-[0.4vw] py-[0.1vw] rounded-[0.15vw] text-[0.4vw] font-bold uppercase tracking-wider">
+            CHOPPED
           </div>
         )}
         {customSampleName && (
-          <div className="absolute bottom-[0.3vw] left-[0.3vw] right-[0.3vw] bg-black/60 text-white px-[0.4vw] py-[0.15vw] rounded-[0.2vw] text-[0.5vw] font-medium truncate text-center">
+          <div className="absolute bottom-[0.3vw] left-[0.3vw] right-[0.3vw] bg-black/70 text-white/90 px-[0.4vw] py-[0.15vw] rounded-[0.15vw] text-[0.45vw] font-mono truncate text-center">
             {customSampleName}
           </div>
         )}
         {isDragOver && (
-          <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-            <span className="text-[0.8vw] font-semibold text-green-400">Drop audio</span>
+          <div className="absolute inset-0 bg-amber-500/30 flex items-center justify-center rounded-[0.5vw]">
+            <span className="text-[0.7vw] font-bold text-amber-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">DROP</span>
           </div>
         )}
         <motion.div

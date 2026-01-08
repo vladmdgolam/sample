@@ -295,17 +295,6 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
               )
             })}
           </div>
-          <div className="grid grid-cols-3 gap-[0.42vw]">
-            <div className="grid dark:opacity-35 place-content-center">
-              {/* <img src="/text/mts.svg" alt="" className="" /> */}
-            </div>
-            <div className="grid dark:opacity-35 place-content-center">
-              <img src="/text/input.svg" alt="" className="" />
-            </div>
-            <div className="grid dark:opacity-35 place-content-center">
-              <img src="/text/output.svg" alt="" className="" />
-            </div>
-          </div>
         </div>}
       </div>
     </div>

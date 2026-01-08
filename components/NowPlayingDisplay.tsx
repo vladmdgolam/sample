@@ -76,12 +76,12 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
     if (chop) {
       const startX = (chop.start / audioBuffer.duration) * width
       const endX = (chop.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(34, 197, 94, 0.4)"
+      ctx.fillStyle = "rgba(74, 222, 128, 0.2)"
       ctx.fillRect(startX, 0, endX - startX, height)
     }
 
-    // Draw waveform
-    ctx.fillStyle = chop ? "rgba(34, 197, 94, 0.6)" : "rgba(255, 255, 255, 0.15)"
+    // Draw waveform in LCD green
+    ctx.fillStyle = chop ? "rgba(74, 222, 128, 0.4)" : "rgba(74, 222, 128, 0.25)"
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
@@ -93,9 +93,9 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
-    // Draw progress overlay
+    // Draw progress overlay in bright LCD green
     const progressX = progress * width
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)"
+    ctx.fillStyle = "rgba(74, 222, 128, 0.9)"
     for (let i = 0; i < progressX; i++) {
       let min = 1.0
       let max = -1.0
@@ -109,7 +109,7 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
   }, [isLoading, progress, chop])
 
   if (isLoading) {
-    return <div className="h-[2vw] w-full rounded-full bg-white/10" />
+    return <div className="h-[1.5vw] w-full rounded-[0.2vw] bg-[var(--lcd-text)]/10" />
   }
 
   return (
@@ -117,7 +117,7 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
       ref={canvasRef}
       width={400}
       height={60}
-      className="w-full h-[2vw] rounded-[0.3vw]"
+      className="w-full h-[1.5vw] rounded-[0.2vw]"
     />
   )
 }
@@ -405,28 +405,28 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
   }
   return (
     <div className="relative">
-      <div className="absolute inset-0 rounded-[0.68vw] border border-white/5 bg-black/35 p-[1.1vw] text-white shadow-inner flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between text-[0.65vw] uppercase tracking-[0.3em] opacity-60 flex-shrink-0">
-          <span>Now Playing</span>
+      <div className="absolute inset-0 rounded-[0.4vw] border-2 border-black/40 bg-[var(--lcd-bg)] p-[1vw] shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between text-[0.6vw] uppercase tracking-[0.2em] text-[var(--lcd-text)] font-mono flex-shrink-0">
+          <span>NOW PLAYING</span>
           <span>{tracks.length.toString().padStart(2, "0")}</span>
         </div>
-        <div className="mt-[0.9vw] grid gap-[0.6vw] overflow-y-auto flex-1 min-h-0">
+        <div className="mt-[0.8vw] grid gap-[0.5vw] overflow-y-auto flex-1 min-h-0 content-start">
         {tracks.length === 0 ? (
-          <div className="flex items-center justify-center rounded-[0.4vw] border border-dashed border-white/10 py-[1.4vw] text-[0.75vw] uppercase tracking-[0.2em] text-white/35">
-            Silence
+          <div className="flex items-center justify-center rounded-[0.2vw] border border-dashed border-[var(--lcd-text-dim)] py-[1.2vw] text-[0.7vw] uppercase tracking-[0.15em] text-[var(--lcd-text-dim)] font-mono">
+            READY
           </div>
         ) : (
           tracks.map((track) => {
             const percent = Math.min(track.progress, 1)
             return (
-              <div key={track.id} className="flex flex-col gap-[0.4vw] min-w-0">
-                <div className="flex items-center justify-between gap-[0.6vw] min-w-0">
-                  <div className="rounded-[0.3vw] bg-white/10 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-semibold tracking-[0.2em] flex-shrink-0">
+              <div key={track.id} className="flex flex-col gap-[0.3vw] min-w-0">
+                <div className="flex items-center justify-between gap-[0.5vw] min-w-0">
+                  <div className="rounded-[0.2vw] bg-[var(--lcd-text)]/20 px-[0.5vw] py-[0.2vw] text-[0.6vw] font-mono font-bold tracking-[0.15em] text-[var(--lcd-text)] flex-shrink-0">
                     {track.padKey.toUpperCase()}
                   </div>
-                  <div className="flex items-center gap-[0.6vw] text-[0.7vw] uppercase tracking-[0.15em] text-white/70 min-w-0 flex-1">
+                  <div className="flex items-center gap-[0.5vw] text-[0.55vw] uppercase tracking-[0.1em] text-[var(--lcd-text)] font-mono min-w-0 flex-1">
                     <span className="truncate flex-1">{track.label}</span>
-                    <span className="text-white/50 flex-shrink-0">{formatPercent(percent)}</span>
+                    <span className="text-[var(--lcd-text-dim)] flex-shrink-0">{formatPercent(percent)}</span>
                   </div>
                 </div>
                 <MiniWaveform sampleSrc={track.sampleSrc} progress={percent} chop={track.chop} />
