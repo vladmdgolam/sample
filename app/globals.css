@@ -3,34 +3,34 @@
 @tailwind utilities;
 
 :root {
-  /* MPC60 Colors */
-  --c-chassis-main: #CDCBC9;
-  --c-chassis-dark: #B0B4B5;
-  --c-armrest: #1A1A1A;
+  /* Pastel Colors */
+  --c-chassis-main: #E8E4E1;
+  --c-chassis-dark: #D4CFC9;
+  --c-armrest: #3D3D3D;
 
-  --c-pad-rubber: #8C8C8C;
-  --c-btn-light: #EBEBEB;
-  --c-btn-slate: #536775;
-  --c-btn-red: #D9381E;
+  --c-pad-rubber: #B8C4D0;
+  --c-btn-light: #F5F0ED;
+  --c-btn-slate: #8BA4B4;
+  --c-btn-red: #E8857A;
 
-  --c-lcd-bg: #005F48;
-  --c-lcd-bezel: #333333;
-  --c-lcd-text: #7FFFB2;
-  --c-lcd-text-dim: #3D8C6A;
+  --c-lcd-bg: #A8D5C2;
+  --c-lcd-bezel: #6B8F80;
+  --c-lcd-text: #2D5A47;
+  --c-lcd-text-dim: #5A8B74;
 
-  --c-text-dark: #2B2B2B;
-  --c-accent-red: #C21F1F;
+  --c-text-dark: #4A4A4A;
+  --c-accent-red: #E88B82;
 
   /* Radii */
-  --r-pad: 4px;
-  --r-btn: 2px;
+  --r-pad: 6px;
+  --r-btn: 4px;
 
   /* Shadows */
-  --shadow-btn: 1px 1px 2px rgba(0,0,0,0.25), -1px -1px 1px rgba(255,255,255,0.4);
-  --shadow-pad-inset: inset 0px 2px 4px rgba(0,0,0,0.4), inset 0px -1px 2px rgba(255,255,255,0.1);
+  --shadow-btn: 1px 1px 3px rgba(0,0,0,0.15), -1px -1px 2px rgba(255,255,255,0.6);
+  --shadow-pad-inset: inset 0px 2px 4px rgba(0,0,0,0.2), inset 0px -1px 2px rgba(255,255,255,0.3);
 
   /* Legacy mappings */
-  --page-bg: #fff;
+  --page-bg: #F5F2EF;
   --container-bg: var(--c-chassis-main);
   --bg: var(--c-pad-rubber);
   --lcd-bg: var(--c-lcd-bg);
