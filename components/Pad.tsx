@@ -205,9 +205,9 @@ const PadComponent: React.FC<PadProps> = ({
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {showTips && (
-          <div className="grid h-full place-content-center">
-            <span className="text-xs opacity-50">{padKey}</span>
-            <span className="text-xs opacity-30">{triggerKeys.join(", ")}</span>
+          <div className="grid h-full place-content-center text-white">
+            <span className="text-[1vw] font-bold opacity-80 text-center">{padKey.toUpperCase()}</span>
+            <span className="text-[0.6vw] opacity-50 text-center">{triggerKeys.join(", ")}</span>
           </div>
         )}
         {chop && (

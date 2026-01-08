@@ -229,7 +229,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
           onExitEditMode={handleExitEditMode}
           onApplyEdit={handleApplyEdit}
         />
-        <div className="flex flex-col gap-[0.42vw] flex-1 min-h-0">
+        {!editMode && <div className="flex flex-col gap-[0.42vw] flex-1 min-h-0">
           <div className="grid grid-cols-4 pads_grid">
             {padKeys.map((key, index) => (
               <Pad
@@ -256,7 +256,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
               <img src="/text/output.svg" alt="" className="" />
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )

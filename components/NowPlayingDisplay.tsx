@@ -137,6 +137,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [playbackPosition, setPlaybackPosition] = useState<number | null>(null)
 
   useEffect(() => {
     const loadAudio = async () => {
@@ -247,7 +248,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   }, [])
 
   const handlePlaySelection = useCallback(() => {
-    if (!selection || !sampleSrc) return
+    if (!selection || !sampleSrc || !audioBuffer) return
 
     // Stop any currently playing audio
     if (audioRef.current) {
@@ -261,18 +262,24 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     audio.addEventListener('loadedmetadata', () => {
       audio.currentTime = selection.start
       setIsPlaying(true)
+      setPlaybackPosition(selection.start / audioBuffer.duration)
     }, { once: true })
 
     const handleTimeUpdate = () => {
+      // Update playhead position
+      setPlaybackPosition(audio.currentTime / audioBuffer.duration)
+
       if (audio.currentTime >= selection.end) {
         audio.pause()
         setIsPlaying(false)
+        setPlaybackPosition(null)
         audio.removeEventListener('timeupdate', handleTimeUpdate)
       }
     }
 
     const handleEnded = () => {
       setIsPlaying(false)
+      setPlaybackPosition(null)
       audio.removeEventListener('timeupdate', handleTimeUpdate)
       audio.removeEventListener('ended', handleEnded)
     }
@@ -280,13 +287,14 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     audio.addEventListener('timeupdate', handleTimeUpdate)
     audio.addEventListener('ended', handleEnded)
     audio.play()
-  }, [selection, sampleSrc])
+  }, [selection, sampleSrc, audioBuffer])
 
   const handleStopPlayback = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
       setIsPlaying(false)
+      setPlaybackPosition(null)
     }
   }, [])
 
@@ -366,6 +374,15 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           />
+          {/* Playhead indicator */}
+          {playbackPosition !== null && (
+            <div
+              className="absolute top-0 h-[10vw] w-[2px] bg-white pointer-events-none"
+              style={{ left: `${playbackPosition * 100}%` }}
+            >
+              <div className="absolute -top-[0.3vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.3vw] border-r-[0.3vw] border-t-[0.4vw] border-l-transparent border-r-transparent border-t-white" />
+            </div>
+          )}
           {selection && (
             <div className="mt-[0.6vw] text-[0.65vw] text-white/50 text-center">
               Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s (
@@ -381,7 +398,9 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
 export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode, onExitEditMode, onApplyEdit }) => {
   if (editMode && onExitEditMode && onApplyEdit) {
     return (
-      <WaveformEditor sampleSrc={editMode.sampleSrc} padKey={editMode.padKey} onExit={onExitEditMode} onApply={onApplyEdit} />
+      <div className="flex-1">
+        <WaveformEditor sampleSrc={editMode.sampleSrc} padKey={editMode.padKey} onExit={onExitEditMode} onApply={onApplyEdit} />
+      </div>
     )
   }
   return (
