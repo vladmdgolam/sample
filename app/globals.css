@@ -6,9 +6,10 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 200, 200, 200;
   --background-end-rgb: 180, 180, 180;
-  --bg: #6a6a6a;
+  --page-bg: #6a6a6a;
+  --container-bg: #c8c8c8;
+  --bg: #7a7a7a;
   --pad-bg: #c8c8c8;
-  --pad-surface: #7a7a7a;
   --lcd-bg: #1a2b1a;
   --lcd-text: #4ade80;
   --lcd-text-dim: #2d5a2d;
@@ -19,9 +20,10 @@
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 30, 30, 30;
   --background-end-rgb: 20, 20, 20;
+  --page-bg: #1a1a1a;
+  --container-bg: #2a2a2a;
   --bg: #4a4a4a;
   --pad-bg: #2a2a2a;
-  --pad-surface: #5a5a5a;
   --lcd-bg: #0a1a0a;
   --lcd-text: #4ade80;
   --lcd-text-dim: #1a3a1a;
@@ -38,7 +40,7 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  background-color: var(--bg);
+  background-color: var(--page-bg);
 }
 
 .dark body {
