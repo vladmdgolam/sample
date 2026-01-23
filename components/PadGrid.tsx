@@ -299,7 +299,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
         {/* Credits */}
         <div className="hidden md:block" /> {/* Spacer for first column */}
         <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70 pt-[2vw] md:pt-[0.5vw]">
-          Samples by<a
+          Samples by{" "}<a
             href="https://drumboii.com/products/free-808-sample-pack"
             target="_blank"
             rel="noopener noreferrer"
