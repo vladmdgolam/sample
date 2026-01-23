@@ -1,0 +1,27 @@
+{
+  "name": "sample-pad-demo-video",
+  "version": "1.0.0",
+  "description": "Demo video for Sample Pad application",
+  "scripts": {
+    "studio": "remotion studio",
+    "build": "remotion render SamplePadDemo out/video.mp4",
+    "render": "remotion render"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.27.0",
+  "dependencies": {
+    "@remotion/bundler": "^4.0.409",
+    "@remotion/cli": "^4.0.409",
+    "@remotion/google-fonts": "^4.0.409",
+    "@remotion/media": "^4.0.409",
+    "@remotion/renderer": "^4.0.409",
+    "@remotion/transitions": "^4.0.409",
+    "@types/react": "^19.2.9",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "remotion": "^4.0.409",
+    "typescript": "^5.9.3"
+  }
+}
