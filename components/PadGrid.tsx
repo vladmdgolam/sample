@@ -46,7 +46,9 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
   const [playingTracks, setPlayingTracks] = useState<PlayingTrack[]>([])
   const [editMode, setEditMode] = useState<{ padKey: string; sampleSrc: string } | null>(null)
   const [sampleChops, setSampleChops] = useState<Record<string, { start: number; end: number }>>({})
-  const [customSamples, setCustomSamples] = useState<Record<string, { url: string; name: string }>>({})
+  const [customSamples, setCustomSamples] = useState<Record<string, { url: string; name: string }>>(
+    {},
+  )
   const trackListeners = useRef<Map<string, TrackListener>>(new Map())
 
   // Memoize trigger keys mapping to prevent recreating arrays on every render
@@ -79,7 +81,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       cleanupTrack(id)
       setPlayingTracks((prev) => prev.filter((track) => track.id !== id))
     },
-    [cleanupTrack]
+    [cleanupTrack],
   )
 
   const handleTrackEnd = useCallback((id: string) => {
@@ -150,7 +152,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
               duration,
               progress: Math.min(progress, 1),
             }
-          })
+          }),
         )
 
         const stored = trackListeners.current.get(id)
@@ -161,7 +163,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
 
       const onLoadedMetadata = () => {
         setPlayingTracks((prev) =>
-          prev.map((track) => (track.id === id ? { ...track, duration: audio.duration } : track))
+          prev.map((track) => (track.id === id ? { ...track, duration: audio.duration } : track)),
         )
         // Start the animation loop
         const stored = trackListeners.current.get(id)
@@ -186,50 +188,53 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
         }
       }
     },
-    []
+    [],
   )
 
   const handleTrackStart = useCallback(
     (payload: { id: string; padKey: string; sampleSrc: string; audio: HTMLAudioElement }) => {
       handleTrackStartRef.current?.(payload)
     },
-    []
+    [],
   )
 
   const handleEnterEditMode = useCallback((padKey: string, sampleSrc: string) => {
     setEditMode({ padKey, sampleSrc })
   }, [])
 
-  const handleFileDrop = useCallback((startPadKey: string, files: File[]) => {
-    const startIndex = padKeys.indexOf(startPadKey)
-    if (startIndex === -1) return
+  const handleFileDrop = useCallback(
+    (startPadKey: string, files: File[]) => {
+      const startIndex = padKeys.indexOf(startPadKey)
+      if (startIndex === -1) return
 
-    const newCustomSamples: Record<string, { url: string; name: string }> = {}
-    const chopsToRemove: string[] = []
+      const newCustomSamples: Record<string, { url: string; name: string }> = {}
+      const chopsToRemove: string[] = []
 
-    files.forEach((file, i) => {
-      const targetIndex = startIndex + i
-      if (targetIndex < padKeys.length) {
-        const targetPadKey = padKeys[targetIndex]
-        const url = URL.createObjectURL(file)
-        const name = file.name.replace(/\.[^/.]+$/, "") // Remove extension
-        newCustomSamples[targetPadKey] = { url, name }
-        chopsToRemove.push(targetPadKey)
-      }
-    })
+      files.forEach((file, i) => {
+        const targetIndex = startIndex + i
+        if (targetIndex < padKeys.length) {
+          const targetPadKey = padKeys[targetIndex]
+          const url = URL.createObjectURL(file)
+          const name = file.name.replace(/\.[^/.]+$/, "") // Remove extension
+          newCustomSamples[targetPadKey] = { url, name }
+          chopsToRemove.push(targetPadKey)
+        }
+      })
 
-    setCustomSamples((prev) => ({
-      ...prev,
-      ...newCustomSamples,
-    }))
+      setCustomSamples((prev) => ({
+        ...prev,
+        ...newCustomSamples,
+      }))
 
-    // Clear any existing chops for the affected pads
-    setSampleChops((prev) => {
-      const updated = { ...prev }
-      chopsToRemove.forEach((key) => delete updated[key])
-      return updated
-    })
-  }, [padKeys])
+      // Clear any existing chops for the affected pads
+      setSampleChops((prev) => {
+        const updated = { ...prev }
+        chopsToRemove.forEach((key) => delete updated[key])
+        return updated
+      })
+    },
+    [padKeys],
+  )
 
   const handleExitEditMode = useCallback(() => {
     setEditMode(null)
@@ -272,17 +277,20 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     e.stopPropagation()
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-    // Check if it's a JSON config file
-    const files = Array.from(e.dataTransfer.files)
-    const jsonFile = files.find(f => f.name.endsWith(".json"))
-    if (jsonFile) {
-      handleImportConfig(jsonFile)
-    }
-  }, [handleImportConfig])
+      // Check if it's a JSON config file
+      const files = Array.from(e.dataTransfer.files)
+      const jsonFile = files.find((f) => f.name.endsWith(".json"))
+      if (jsonFile) {
+        handleImportConfig(jsonFile)
+      }
+    },
+    [handleImportConfig],
+  )
 
   const handleApplyEdit = useCallback(
     (padKey: string, selection: { start: number; end: number }) => {
@@ -303,7 +311,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       // Exit edit mode
       setEditMode(null)
     },
-    []
+    [],
   )
 
   useEffect(() => {
@@ -342,7 +350,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     const handleDocDrop = (e: DragEvent) => {
       e.preventDefault()
       const files = Array.from(e.dataTransfer?.files || [])
-      const jsonFile = files.find(f => f.name.endsWith(".json"))
+      const jsonFile = files.find((f) => f.name.endsWith(".json"))
       if (jsonFile) {
         handleImportConfig(jsonFile)
       }
@@ -372,58 +380,67 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
           onExitEditMode={handleExitEditMode}
           onApplyEdit={handleApplyEdit}
         />
-        {!editMode && <div className="flex flex-col gap-[0.6vw] min-h-0">
-          <div className="grid grid-cols-4 pads_grid">
-            {padKeys.map((key, index) => {
-              const custom = customSamples[key]
-              return (
-                <Pad
-                  key={index}
-                  padKey={key}
-                  triggerKeys={padToTriggerKeys[key]}
-                  showTips={showTips}
-                  sampleSrc={custom?.url ?? padSamples[key]}
-                  customSampleName={custom?.name}
-                  chop={sampleChops[key]}
-                  onTrackStart={handleTrackStart}
-                  onTrackEnd={handleTrackEnd}
-                  onEnterEditMode={handleEnterEditMode}
-                  onFileDrop={handleFileDrop}
-                />
-              )
-            })}
+        {!editMode && (
+          <div className="flex flex-col gap-[0.6vw] min-h-0">
+            <div className="grid grid-cols-4 pads_grid">
+              {padKeys.map((key, index) => {
+                const custom = customSamples[key]
+                return (
+                  <Pad
+                    key={index}
+                    padKey={key}
+                    triggerKeys={padToTriggerKeys[key]}
+                    showTips={showTips}
+                    sampleSrc={custom?.url ?? padSamples[key]}
+                    customSampleName={custom?.name}
+                    chop={sampleChops[key]}
+                    onTrackStart={handleTrackStart}
+                    onTrackEnd={handleTrackEnd}
+                    onEnterEditMode={handleEnterEditMode}
+                    onFileDrop={handleFileDrop}
+                  />
+                )
+              })}
+            </div>
           </div>
-        </div>}
+        )}
         {/* Footer - hidden in edit mode */}
         {!editMode && (
           <>
             <div className="hidden md:block" /> {/* Spacer for first column */}
             <div className="hidden md:flex flex-col gap-[0.3vw] pt-[2vw] md:pt-[0.5vw]">
               <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
-                Samples by{" "}<a
+                Samples by{" "}
+                <a
                   href="https://drumboii.com/products/free-808-sample-pack"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:opacity-80 transition-opacity"
-                >Drumboii</a> • Made by <a
+                >
+                  Drumboii
+                </a>{" "}
+                • Made by{" "}
+                <a
                   href="https://vladik.xyz/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:opacity-80 transition-opacity"
-                >Vlad</a>
+                >
+                  Vlad
+                </a>
               </div>
               <div className="flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
                 <span className="flex items-center gap-[0.25vw]">
                   <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
-                  <span>tips</span>
+                  <span>to see hotkeys</span>
                 </span>
                 <span className="flex items-center gap-[0.25vw]">
+                  <span>press</span>
                   <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
-                  <span>edit</span>
+                  <span>on a pad to chop</span>
                 </span>
                 <span className="flex items-center gap-[0.25vw]">
-                  <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">DnD</Kbd>
-                  <span>load sample</span>
+                  <span>drag and drop a file to upload sample</span>
                 </span>
                 {Object.keys(sampleChops).length > 0 && (
                   <button
