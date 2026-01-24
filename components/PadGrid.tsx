@@ -444,7 +444,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
               )} */}
             </div>
             <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
-              Samples by{" "}
+              808 Pack by{" "}
               <a
                 href="https://drumboii.com/products/free-808-sample-pack"
                 target="_blank"
