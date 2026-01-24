@@ -1,6 +1,7 @@
 "use client"
 
 import { glowSize } from "@/app/constants"
+import { Kbd } from "@/components/ui/kbd"
 import classNames from "classnames"
 import { motion, useAnimationFrame } from "framer-motion"
 import { useCallback, useEffect, useRef, useState, memo } from "react"
@@ -296,9 +297,14 @@ const PadComponent: React.FC<PadProps> = ({
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {showTips && (
-          <div className="grid h-full place-content-center text-white/70">
-            <span className="text-[1vw] font-bold text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">{padKey.toUpperCase()}</span>
-            <span className="text-[0.5vw] opacity-60 text-center">{triggerKeys.join(", ")}</span>
+          <div className="grid h-full place-content-center gap-[0.3vw]">
+            <div className="flex justify-center gap-[0.2vw]">
+              {triggerKeys.map((key) => (
+                <Kbd key={key} className="text-[0.7vw] px-[0.4vw] py-[0.15vw]">
+                  {key.toUpperCase()}
+                </Kbd>
+              ))}
+            </div>
           </div>
         )}
         {chop && (
