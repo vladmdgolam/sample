@@ -31,8 +31,8 @@
   --r-btn: 4px;
 
   /* Shadows */
-  --shadow-btn: 1px 1px 3px rgba(74,66,57,0.12), -1px -1px 2px rgba(255,255,255,0.7);
-  --shadow-pad-inset: inset 0px 2px 4px rgba(74,66,57,0.18), inset 0px -1px 2px rgba(255,255,255,0.4);
+  --shadow-btn: 1px 1px 3px rgba(74, 66, 57, 0.12), -1px -1px 2px rgba(255, 255, 255, 0.7);
+  --shadow-pad-inset: inset 0px 2px 4px rgba(74, 66, 57, 0.18), inset 0px -1px 2px rgba(255, 255, 255, 0.4);
 
   /* Perfect shadow colors (warm tint) */
   --shadow-color-8: rgba(74, 66, 57, 0.03);
@@ -140,14 +140,14 @@ body {
 .pad {
   background: var(--c-pad-rubber);
   border-radius: var(--r-pad);
-  border: 1px solid rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   box-shadow: var(--shadow-pad-inset), var(--shadow-btn);
   transition: all 0.1s ease;
 }
 
 .dark .pad {
-  border: 1px solid rgba(0,0,0,0.3);
-  box-shadow: var(--shadow-pad-inset), 1px 1px 3px rgba(0,0,0,0.4);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-pad-inset), 1px 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .pad-hovered {
@@ -216,6 +216,7 @@ body {
       0 0 var(--out-size) var(--c-playing-glow),
       0 0 calc(var(--out-size) * 2) var(--c-playing-glow);
   }
+
   100% {
     box-shadow:
       inset 0 0 25px var(--c-playing-glow),
@@ -237,7 +238,6 @@ body {
 .pads_grid {
   grid-template-rows: repeat(4, minmax(0, 1fr));
   gap: 0.6vw;
-  /* Ensure consistent gap in both directions */
 }
 
 
@@ -266,6 +266,7 @@ body {
     --ring: 28 45% 65%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 30 12% 12%;
     --foreground: 36 18% 85%;
@@ -274,4 +275,3 @@ body {
     --border: 30 8% 25%;
   }
 }
-

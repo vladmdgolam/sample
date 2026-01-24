@@ -389,7 +389,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-[4vw] md:p-[2.5%] pb-[3vw] md:pb-[1.5%] bg-[var(--container-bg)] max-w-full relative rounded-[2vw] md:rounded-[0.5vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-[1.5vw] mx-[3vw] md:mx-0 shadow-device">
+      <div className="p-[4vw] md:p-[2.5%] pb-[3vw] md:pb-[1.5%] bg-[var(--container-bg)] max-w-full relative rounded-[2vw] md:rounded-[0.5vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-y-[1vw] gap-x-[1.5vw] mx-[3vw] md:mx-0 shadow-device">
         <NowPlayingDisplay
           tracks={playingTracks}
           editMode={editMode}
@@ -424,7 +424,21 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
         {!editMode && (
           <>
             <div className="hidden md:block" /> {/* Spacer for first column */}
-            <div className="flex flex-col gap-[1vw] md:gap-[0.3vw] pt-[3vw] md:pt-[0.5vw]">
+            <div className="flex flex-col gap-[1vw] md:gap-[0.5vw]">
+              <div className="hidden md:flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
+                <span className="flex items-center gap-[0.25vw]">
+                  <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
+                  <span className="text-nowrap">for hotkeys</span>
+                </span>
+                <span className="flex items-center gap-[0.25vw]">
+                  <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
+                  <span className="text-nowrap">on a pad to chop</span>
+                </span>
+                •
+                <span className="flex items-center gap-[0.25vw]">
+                  <span className="text-balance">drop a file on a pad to upload a sample</span>
+                </span>
+              </div>
               <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
                 808 Pack by{" "}
                 <a
@@ -444,20 +458,6 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                 >
                   Vlad
                 </a>
-              </div>
-              <div className="hidden md:flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
-                <span className="flex items-center gap-[0.25vw]">
-                  <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
-                  <span className="text-nowrap">for hotkeys</span>
-                </span>
-                <span className="flex items-center gap-[0.25vw]">
-                  <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
-                  <span className="text-nowrap">on a pad to chop</span>
-                </span>
-                •
-                <span className="flex items-center gap-[0.25vw]">
-                  <span className="text-balance">drop a file on a pad to upload a sample</span>
-                </span>
               </div>
             </div>
           </>
