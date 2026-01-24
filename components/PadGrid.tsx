@@ -418,7 +418,32 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                 )
               })}
             </div>
-            <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70 pt-[1vw] md:pt-[0.3vw]">
+            <div className="hidden md:flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50 pt-[1vw] md:pt-[0.3vw]">
+              <span className="flex items-center gap-[0.25vw]">
+                <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
+                <span className="text-nowrap">for hotkeys</span>
+              </span>
+              <span className="flex items-center gap-[0.25vw]">
+                <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
+                <span className="text-nowrap">on a pad to chop</span>
+              </span>
+              •
+              <span className="flex items-center gap-[0.25vw]">
+                <span className="text-balance">drop a file on a pad to upload a sample</span>
+              </span>
+              {/* {Object.keys(sampleChops).length > 0 && (
+                <>
+                  •
+                  <button
+                    onClick={handleExportConfig}
+                    className="flex underline items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
+                  >
+                    <span>export</span>
+                  </button>
+                </>
+              )} */}
+            </div>
+            <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
               Samples by{" "}
               <a
                 href="https://drumboii.com/products/free-808-sample-pack"
@@ -437,31 +462,6 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
               >
                 Vlad
               </a>
-            </div>
-            <div className="hidden md:flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
-              <span className="flex items-center gap-[0.25vw]">
-                <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
-                <span className="text-nowrap">for hotkeys</span>
-              </span>
-              <span className="flex items-center gap-[0.25vw]">
-                <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
-                <span className="text-nowrap">on a pad to chop</span>
-              </span>
-              •
-              <span className="flex items-center gap-[0.25vw]">
-                <span className="text-balance">drop a file on a pad to upload a sample</span>
-              </span>
-              {Object.keys(sampleChops).length > 0 && (
-                <>
-                  •
-                  <button
-                    onClick={handleExportConfig}
-                    className="flex underline items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
-                  >
-                    <span>export</span>
-                  </button>
-                </>
-              )}
             </div>
           </div>
         )}
