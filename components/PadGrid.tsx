@@ -32,7 +32,7 @@ interface PlayingTrack {
 
 interface TrackListener {
   audio: HTMLAudioElement
-  onTimeUpdate: () => void
+  animationFrameId: number | null
   onLoadedMetadata: () => void
 }
 
@@ -63,8 +63,10 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
   const cleanupTrack = useCallback((id: string) => {
     const stored = trackListeners.current.get(id)
     if (stored) {
-      const { audio, onTimeUpdate, onLoadedMetadata } = stored
-      audio.removeEventListener("timeupdate", onTimeUpdate)
+      const { audio, animationFrameId, onLoadedMetadata } = stored
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId)
+      }
       audio.removeEventListener("loadedmetadata", onLoadedMetadata)
       trackListeners.current.delete(id)
     }
@@ -125,7 +127,16 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
         ]
       })
 
-      const onTimeUpdate = () => {
+      // Use requestAnimationFrame for smooth 60fps progress updates
+      const updateProgress = () => {
+        if (audio.paused || audio.ended) {
+          const stored = trackListeners.current.get(id)
+          if (stored) {
+            stored.animationFrameId = null
+          }
+          return
+        }
+
         setPlayingTracks((prev) =>
           prev.map((track) => {
             if (track.id !== id) return track
@@ -141,22 +152,39 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
             }
           })
         )
+
+        const stored = trackListeners.current.get(id)
+        if (stored) {
+          stored.animationFrameId = requestAnimationFrame(updateProgress)
+        }
       }
 
       const onLoadedMetadata = () => {
         setPlayingTracks((prev) =>
           prev.map((track) => (track.id === id ? { ...track, duration: audio.duration } : track))
         )
+        // Start the animation loop
+        const stored = trackListeners.current.get(id)
+        if (stored) {
+          stored.animationFrameId = requestAnimationFrame(updateProgress)
+        }
       }
 
-      audio.addEventListener("timeupdate", onTimeUpdate)
       audio.addEventListener("loadedmetadata", onLoadedMetadata)
 
       trackListeners.current.set(id, {
         audio,
-        onTimeUpdate,
+        animationFrameId: null,
         onLoadedMetadata,
       })
+
+      // If metadata already loaded, start animation immediately
+      if (audio.readyState >= 1) {
+        const stored = trackListeners.current.get(id)
+        if (stored) {
+          stored.animationFrameId = requestAnimationFrame(updateProgress)
+        }
+      }
     },
     []
   )
@@ -295,8 +323,10 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
 
   useEffect(() => {
     return () => {
-      trackListeners.current.forEach(({ audio, onTimeUpdate, onLoadedMetadata }) => {
-        audio.removeEventListener("timeupdate", onTimeUpdate)
+      trackListeners.current.forEach(({ audio, animationFrameId, onLoadedMetadata }) => {
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId)
+        }
         audio.removeEventListener("loadedmetadata", onLoadedMetadata)
       })
       trackListeners.current.clear()
