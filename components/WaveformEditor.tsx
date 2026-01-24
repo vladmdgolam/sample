@@ -1,0 +1,731 @@
+"use client"
+
+import type { FC } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
+
+interface WaveformEditorProps {
+  sampleSrc: string
+  sampleName?: string
+  padKey: string
+  initialChop?: { start: number; end: number }
+  onExit: () => void
+  onApply: (padKey: string, selection: { start: number; end: number }) => void
+}
+
+export const WaveformEditor: FC<WaveformEditorProps> = ({
+  sampleSrc,
+  sampleName,
+  padKey,
+  initialChop,
+  onExit,
+  onApply,
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState<number | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playbackPosition, setPlaybackPosition] = useState<number | null>(null)
+
+  // Zoom and pan state
+  const [zoom, setZoom] = useState(1)
+  const [panOffset, setPanOffset] = useState(0) // 0-1 range, represents the start of visible area
+  const lastTouchDistanceRef = useRef<number | null>(null)
+  const lastTouchCenterRef = useRef<number | null>(null)
+
+  // Convert screen X position to time (accounting for zoom/pan)
+  const screenToTime = useCallback((screenX: number, rect: DOMRect) => {
+    if (!audioBuffer) return 0
+    const visibleDuration = audioBuffer.duration / zoom
+    const visibleStart = panOffset * audioBuffer.duration
+    const relativeX = screenX / rect.width
+    return visibleStart + relativeX * visibleDuration
+  }, [audioBuffer, zoom, panOffset])
+
+  // Convert time to screen X position (accounting for zoom/pan)
+  const timeToScreen = useCallback((time: number) => {
+    if (!audioBuffer) return 0
+    const visibleDuration = audioBuffer.duration / zoom
+    const visibleStart = panOffset * audioBuffer.duration
+    return ((time - visibleStart) / visibleDuration)
+  }, [audioBuffer, zoom, panOffset])
+
+  useEffect(() => {
+    const loadAudio = async () => {
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+        audioContextRef.current = audioContext
+
+        const response = await fetch(sampleSrc)
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = await audioContext.decodeAudioData(arrayBuffer)
+
+        setAudioBuffer(buffer)
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Failed to load audio:", error)
+        setIsLoading(false)
+      }
+    }
+
+    loadAudio()
+
+    return () => {
+      audioContextRef.current?.close()
+    }
+  }, [sampleSrc])
+
+  // Initialize selection and zoom from existing chop
+  useEffect(() => {
+    if (audioBuffer && initialChop) {
+      setSelection(initialChop)
+
+      // Calculate zoom to show the chop with some padding
+      const chopDuration = initialChop.end - initialChop.start
+      const padding = chopDuration * 0.5 // 50% padding on each side
+      const viewDuration = chopDuration + padding * 2
+
+      // Only zoom if the chop is less than 50% of the total duration
+      if (viewDuration < audioBuffer.duration * 0.5) {
+        const newZoom = Math.min(20, audioBuffer.duration / viewDuration)
+        const viewStart = Math.max(0, initialChop.start - padding)
+        const maxPan = 1 - 1 / newZoom
+        const newPan = Math.min(maxPan, viewStart / audioBuffer.duration)
+
+        setZoom(newZoom)
+        setPanOffset(newPan)
+      }
+    }
+  }, [audioBuffer, initialChop])
+
+  // Keyboard shortcuts: ESC to exit, Space to play/pause
+  // Store refs to handlers for spacebar
+  const handlePlayRef = useRef<() => void>()
+  const handleStopRef = useRef<() => void>()
+
+  useEffect(() => {
+    handlePlayRef.current = () => {
+      if (!sampleSrc || !audioBuffer) return
+
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+
+      const audio = new Audio(sampleSrc)
+      audioRef.current = audio
+
+      // Use selection if exists, otherwise play full sample
+      const startTime = selection?.start ?? 0
+      const endTime = selection?.end ?? audioBuffer.duration
+
+      const updatePlayhead = () => {
+        if (!audioRef.current) return
+        const currentTime = audioRef.current.currentTime
+        setPlaybackPosition(currentTime / audioBuffer.duration)
+        if (currentTime >= endTime) {
+          audioRef.current.pause()
+          audioRef.current = null
+          setIsPlaying(false)
+          setPlaybackPosition(null)
+          animationFrameRef.current = null
+          return
+        }
+        animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+      }
+
+      audio.addEventListener('loadedmetadata', () => {
+        audio.currentTime = startTime
+        setIsPlaying(true)
+        setPlaybackPosition(startTime / audioBuffer.duration)
+        animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+      }, { once: true })
+
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current)
+          animationFrameRef.current = null
+        }
+      }, { once: true })
+
+      audio.play()
+    }
+
+    handleStopRef.current = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+      }
+    }
+  }, [selection, sampleSrc, audioBuffer])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onExit()
+      } else if (e.key === " ") {
+        e.preventDefault()
+        e.stopPropagation()
+        if (isPlaying) {
+          handleStopRef.current?.()
+        } else {
+          handlePlayRef.current?.()
+        }
+      } else if (e.key === "Enter" && selection) {
+        e.preventDefault()
+        handleStopRef.current?.()
+        onApply(padKey, selection)
+      } else if (e.key === "r" || e.key === "R") {
+        e.preventDefault()
+        // Reset zoom, pan, and selection
+        setZoom(1)
+        setPanOffset(0)
+        setSelection(null)
+        handleStopRef.current?.()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown, true)
+    return () => window.removeEventListener("keydown", handleKeyDown, true)
+  }, [onExit, selection, isPlaying, onApply, padKey])
+
+  useEffect(() => {
+    if (!audioBuffer || !canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const width = canvas.width
+    const height = canvas.height
+    const data = audioBuffer.getChannelData(0)
+    const amp = height / 2
+
+    // Calculate visible range based on zoom and pan
+    const visibleDuration = audioBuffer.duration / zoom
+    const visibleStart = panOffset * audioBuffer.duration
+    const visibleEnd = visibleStart + visibleDuration
+
+    // Calculate which samples to draw
+    const startSample = Math.floor((visibleStart / audioBuffer.duration) * data.length)
+    const endSample = Math.ceil((visibleEnd / audioBuffer.duration) * data.length)
+    const visibleSamples = endSample - startSample
+
+    // Dark green LCD background (retro edit mode)
+    ctx.fillStyle = "#002F24"
+    ctx.fillRect(0, 0, width, height)
+
+    // Draw waveform as filled path for smooth appearance at all zoom levels
+    ctx.fillStyle = "#3D8C6A"
+    ctx.beginPath()
+
+    // Build arrays of min/max values
+    const mins: number[] = []
+    const maxs: number[] = []
+
+    for (let i = 0; i < width; i++) {
+      // Calculate the exact sample position for this pixel
+      const exactSamplePos = startSample + (i / width) * visibleSamples
+      const sampleIdx = Math.floor(exactSamplePos)
+      const nextSampleIdx = Math.min(sampleIdx + 1, data.length - 1)
+      const fraction = exactSamplePos - sampleIdx
+
+      // Clamp to valid range
+      const clampedIdx = Math.max(0, Math.min(data.length - 1, sampleIdx))
+      const clampedNextIdx = Math.max(0, Math.min(data.length - 1, nextSampleIdx))
+
+      // Interpolate between samples for smooth appearance when zoomed in
+      const currentSample = data[clampedIdx] ?? 0
+      const nextSample = data[clampedNextIdx] ?? 0
+      const interpolated = currentSample + (nextSample - currentSample) * fraction
+
+      // For the min/max, also check neighboring samples to avoid gaps
+      const sampleRangeStart = Math.max(0, Math.floor(startSample + (i / width) * visibleSamples))
+      const sampleRangeEnd = Math.max(sampleRangeStart + 1, Math.ceil(startSample + ((i + 1) / width) * visibleSamples))
+
+      let min = interpolated
+      let max = interpolated
+
+      for (let s = sampleRangeStart; s < sampleRangeEnd && s < data.length; s++) {
+        const datum = data[s]
+        if (datum < min) min = datum
+        if (datum > max) max = datum
+      }
+
+      mins.push(min)
+      maxs.push(max)
+    }
+
+    // Draw top edge (max values)
+    ctx.moveTo(0, (1 + maxs[0]) * amp)
+    for (let i = 1; i < width; i++) {
+      ctx.lineTo(i, (1 + maxs[i]) * amp)
+    }
+
+    // Draw bottom edge (min values) in reverse
+    for (let i = width - 1; i >= 0; i--) {
+      ctx.lineTo(i, (1 + mins[i]) * amp)
+    }
+
+    ctx.closePath()
+    ctx.fill()
+
+    // Draw selection with LCD green highlight
+    if (selection) {
+      const startX = timeToScreen(selection.start) * width
+      const endX = timeToScreen(selection.end) * width
+
+      // Only draw if selection is visible
+      if (endX >= 0 && startX <= width) {
+        const clampedStartX = Math.max(0, startX)
+        const clampedEndX = Math.min(width, endX)
+
+        ctx.fillStyle = "rgba(127, 255, 178, 0.3)"
+        ctx.fillRect(clampedStartX, 0, clampedEndX - clampedStartX, height)
+
+        // Draw selection borders
+        ctx.strokeStyle = "rgba(127, 255, 178, 0.8)"
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        if (startX >= 0 && startX <= width) {
+          ctx.moveTo(startX, 0)
+          ctx.lineTo(startX, height)
+        }
+        if (endX >= 0 && endX <= width) {
+          ctx.moveTo(endX, 0)
+          ctx.lineTo(endX, height)
+        }
+        ctx.stroke()
+      }
+    }
+  }, [audioBuffer, selection, zoom, panOffset, timeToScreen])
+
+  // Play from a specific time position to the end (or selection end if within selection)
+  const playFromPosition = useCallback((startTime: number) => {
+    if (!sampleSrc || !audioBuffer) return
+
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+
+    const audio = new Audio(sampleSrc)
+    audioRef.current = audio
+
+    const endTime = audioBuffer.duration
+
+    const updatePlayhead = () => {
+      if (!audioRef.current) return
+      const currentTime = audioRef.current.currentTime
+      setPlaybackPosition(currentTime / audioBuffer.duration)
+
+      if (currentTime >= endTime) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+        animationFrameRef.current = null
+        return
+      }
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+    }
+
+    audio.addEventListener('loadedmetadata', () => {
+      audio.currentTime = startTime
+      setIsPlaying(true)
+      setPlaybackPosition(startTime / audioBuffer.duration)
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+    }, { once: true })
+
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false)
+      setPlaybackPosition(null)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+    }, { once: true })
+
+    audio.play()
+  }, [sampleSrc, audioBuffer])
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!audioBuffer || !canvasRef.current) return
+
+      const rect = canvasRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const time = screenToTime(x, rect)
+
+      // Clamp to valid range
+      const clampedTime = Math.max(0, Math.min(audioBuffer.duration, time))
+
+      setIsDragging(true)
+      setDragStart(clampedTime)
+      setSelection({ start: clampedTime, end: clampedTime })
+    },
+    [audioBuffer, screenToTime]
+  )
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!isDragging || !audioBuffer || !canvasRef.current || dragStart === null) return
+
+      const rect = canvasRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const time = screenToTime(x, rect)
+
+      // Clamp to valid range
+      const clampedTime = Math.max(0, Math.min(audioBuffer.duration, time))
+
+      setSelection({
+        start: Math.min(dragStart, clampedTime),
+        end: Math.max(dragStart, clampedTime),
+      })
+    },
+    [isDragging, audioBuffer, dragStart, screenToTime]
+  )
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+
+    // If it's a point selection (click without drag), play from that position
+    if (selection && Math.abs(selection.end - selection.start) < 0.01) {
+      playFromPosition(selection.start)
+    }
+  }, [selection, playFromPosition])
+
+  const handlePlaySelection = useCallback(() => {
+    if (!sampleSrc || !audioBuffer) return
+
+    // Stop any currently playing audio and animation
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+
+    const audio = new Audio(sampleSrc)
+    audioRef.current = audio
+
+    // Use selection if exists, otherwise play full sample
+    const startTime = selection?.start ?? 0
+    const endTime = selection?.end ?? audioBuffer.duration
+
+    const updatePlayhead = () => {
+      if (!audioRef.current) return
+
+      const currentTime = audioRef.current.currentTime
+      setPlaybackPosition(currentTime / audioBuffer.duration)
+
+      if (currentTime >= endTime) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+        animationFrameRef.current = null
+        return
+      }
+
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+    }
+
+    audio.addEventListener('loadedmetadata', () => {
+      audio.currentTime = startTime
+      setIsPlaying(true)
+      setPlaybackPosition(startTime / audioBuffer.duration)
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+    }, { once: true })
+
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false)
+      setPlaybackPosition(null)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+    }, { once: true })
+
+    audio.play()
+  }, [selection, sampleSrc, audioBuffer])
+
+  const handleStopPlayback = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+      setIsPlaying(false)
+      setPlaybackPosition(null)
+    }
+  }, [])
+
+  const handleApplyChop = useCallback(() => {
+    if (!selection || !audioBuffer) return
+
+    handleStopPlayback()
+    onApply(padKey, selection)
+  }, [selection, audioBuffer, onApply, padKey, handleStopPlayback])
+
+  // Wheel zoom (trackpad pinch or mouse wheel with ctrl/cmd)
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (!audioBuffer || !containerRef.current) return
+
+    // Check if it's a pinch gesture (ctrlKey is true for trackpad pinch)
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+
+      const rect = containerRef.current.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseRatio = mouseX / rect.width
+
+      // Calculate the time at mouse position before zoom
+      const visibleDuration = audioBuffer.duration / zoom
+      const visibleStart = panOffset * audioBuffer.duration
+      const timeAtMouse = visibleStart + mouseRatio * visibleDuration
+
+      // Adjust zoom (negative deltaY = zoom in)
+      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1
+      const newZoom = Math.max(1, Math.min(50, zoom * zoomDelta))
+
+      // Calculate new pan to keep mouse position stable
+      const newVisibleDuration = audioBuffer.duration / newZoom
+      const newVisibleStart = timeAtMouse - mouseRatio * newVisibleDuration
+      const maxPan = 1 - 1 / newZoom
+      const newPan = Math.max(0, Math.min(maxPan, newVisibleStart / audioBuffer.duration))
+
+      setZoom(newZoom)
+      setPanOffset(newPan)
+    } else if (zoom > 1) {
+      // Regular scroll = pan when zoomed in
+      e.preventDefault()
+      const panDelta = e.deltaX !== 0 ? e.deltaX : e.deltaY
+      const panAmount = (panDelta / 500) / zoom
+      const maxPan = 1 - 1 / zoom
+      setPanOffset(prev => Math.max(0, Math.min(maxPan, prev + panAmount)))
+    }
+  }, [audioBuffer, zoom, panOffset])
+
+  // Touch handlers for pinch-to-zoom
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY)
+      const centerX = (touch1.clientX + touch2.clientX) / 2
+      lastTouchDistanceRef.current = distance
+      lastTouchCenterRef.current = centerX
+    }
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && lastTouchDistanceRef.current !== null && containerRef.current && audioBuffer) {
+      e.preventDefault()
+
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY)
+      const centerX = (touch1.clientX + touch2.clientX) / 2
+
+      const rect = containerRef.current.getBoundingClientRect()
+      const centerRatio = (centerX - rect.left) / rect.width
+
+      // Calculate the time at center before zoom
+      const visibleDuration = audioBuffer.duration / zoom
+      const visibleStart = panOffset * audioBuffer.duration
+      const timeAtCenter = visibleStart + centerRatio * visibleDuration
+
+      // Calculate zoom change
+      const scale = distance / lastTouchDistanceRef.current
+      const newZoom = Math.max(1, Math.min(50, zoom * scale))
+
+      // Calculate new pan to keep pinch center stable
+      const newVisibleDuration = audioBuffer.duration / newZoom
+      const newVisibleStart = timeAtCenter - centerRatio * newVisibleDuration
+      const maxPan = 1 - 1 / newZoom
+      const newPan = Math.max(0, Math.min(maxPan, newVisibleStart / audioBuffer.duration))
+
+      setZoom(newZoom)
+      setPanOffset(newPan)
+
+      lastTouchDistanceRef.current = distance
+      lastTouchCenterRef.current = centerX
+    }
+  }, [audioBuffer, zoom, panOffset])
+
+  const handleTouchEnd = useCallback(() => {
+    lastTouchDistanceRef.current = null
+    lastTouchCenterRef.current = null
+  }, [])
+
+  // Native wheel event listener with passive: false to block browser zoom
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || !audioBuffer) return
+
+    const handleNativeWheel = (e: WheelEvent) => {
+      // Block browser zoom on pinch gesture
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+      } else if (zoom > 1) {
+        // Block scroll when panning
+        e.preventDefault()
+      }
+    }
+
+    container.addEventListener('wheel', handleNativeWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleNativeWheel)
+  }, [audioBuffer, zoom])
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
+
+  return (
+    <div className="edit-mode rounded-[0.4vw] border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1.1vw] text-[var(--lcd-text)] shadow-perfect-sm">
+      <div className="flex items-center justify-between mb-[0.9vw]">
+        <div className="flex items-center gap-[0.6vw]">
+          <span className="text-[0.65vw] text-[var(--lcd-text)] font-mono truncate max-w-[15vw]">
+            {sampleName || decodeURIComponent(sampleSrc.split("/").pop() ?? "").replace(/\.[^/.]+$/, "")}
+          </span>
+          {audioBuffer && (
+            <span className="text-[0.65vw] text-[var(--lcd-text-dim)] font-mono">{audioBuffer.duration.toFixed(2)}s</span>
+          )}
+        </div>
+        <div className="flex gap-[0.6vw]">
+          {isPlaying ? (
+            <button
+              onClick={handleStopPlayback}
+              className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80"
+            >
+              STOP <span className="opacity-60">(SPACE)</span>
+            </button>
+          ) : (
+            <button
+              onClick={handlePlaySelection}
+              className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80"
+            >
+              PLAY <span className="opacity-60">(SPACE)</span>
+            </button>
+          )}
+          {selection && (
+            <button
+              onClick={handleApplyChop}
+              className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/20 hover:bg-[var(--lcd-text)]/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
+            >
+              APPLY <span className="opacity-60">(Enter)</span>
+            </button>
+          )}
+          {(selection || zoom > 1) && (
+            <button
+              onClick={() => {
+                setZoom(1)
+                setPanOffset(0)
+                setSelection(null)
+                handleStopPlayback()
+              }}
+              className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80"
+            >
+              RESET <span className="opacity-60">(R)</span>
+            </button>
+          )}
+          <button
+            onClick={onExit}
+            className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/10 hover:bg-[var(--lcd-text)]/20 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
+          >
+            EXIT <span className="opacity-60">(ESC)</span>
+          </button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-[3vw] text-[0.75vw] uppercase tracking-[0.2em] text-[var(--lcd-text-dim)] font-mono">
+          Loading...
+        </div>
+      ) : (
+        <div
+          ref={containerRef}
+          className="relative"
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <canvas
+            ref={canvasRef}
+            width={1600}
+            height={400}
+            className="w-full h-[10vw] rounded-[0.4vw] cursor-crosshair"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          />
+          {/* Playhead indicator */}
+          {playbackPosition !== null && (() => {
+            const screenPos = timeToScreen(playbackPosition * (audioBuffer?.duration || 1))
+            // Only show if playhead is in visible range
+            if (screenPos >= 0 && screenPos <= 1) {
+              return (
+                <div
+                  className="absolute top-0 h-[10vw] w-[2px] bg-[var(--lcd-text)] pointer-events-none"
+                  style={{ left: `${screenPos * 100}%` }}
+                >
+                  <div className="absolute -top-[0.3vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.3vw] border-r-[0.3vw] border-t-[0.4vw] border-l-transparent border-r-transparent border-t-[var(--lcd-text)]" />
+                </div>
+              )
+            }
+            return null
+          })()}
+          <div className="mt-[0.6vw] text-[0.65vw] text-[var(--lcd-text-dim)] text-center font-mono h-[1.2vw] flex items-center justify-center gap-[1vw]">
+            {selection ? (
+              <>Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s ({(selection.end - selection.start).toFixed(3)}s)</>
+            ) : (
+              <span className="opacity-70">
+                Drag to select • Pinch to zoom{zoom > 1 && " • Scroll to pan"}
+              </span>
+            )}
+            {zoom > 1 && (
+              <span className="opacity-60">{zoom.toFixed(1)}x</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
