@@ -207,7 +207,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
 
   useEffect(() => {
     handlePlayRef.current = () => {
-      if (!selection || !sampleSrc || !audioBuffer) return
+      if (!sampleSrc || !audioBuffer) return
 
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
@@ -221,11 +221,15 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       const audio = new Audio(sampleSrc)
       audioRef.current = audio
 
+      // Use selection if exists, otherwise play full sample
+      const startTime = selection?.start ?? 0
+      const endTime = selection?.end ?? audioBuffer.duration
+
       const updatePlayhead = () => {
         if (!audioRef.current) return
         const currentTime = audioRef.current.currentTime
         setPlaybackPosition(currentTime / audioBuffer.duration)
-        if (currentTime >= selection.end) {
+        if (currentTime >= endTime) {
           audioRef.current.pause()
           audioRef.current = null
           setIsPlaying(false)
@@ -237,9 +241,9 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       }
 
       audio.addEventListener('loadedmetadata', () => {
-        audio.currentTime = selection.start
+        audio.currentTime = startTime
         setIsPlaying(true)
-        setPlaybackPosition(selection.start / audioBuffer.duration)
+        setPlaybackPosition(startTime / audioBuffer.duration)
         animationFrameRef.current = requestAnimationFrame(updatePlayhead)
       }, { once: true })
 
@@ -276,12 +280,10 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       } else if (e.key === " ") {
         e.preventDefault()
         e.stopPropagation()
-        if (selection) {
-          if (isPlaying) {
-            handleStopRef.current?.()
-          } else {
-            handlePlayRef.current?.()
-          }
+        if (isPlaying) {
+          handleStopRef.current?.()
+        } else {
+          handlePlayRef.current?.()
         }
       } else if (e.key === "Enter" && selection) {
         e.preventDefault()
@@ -474,7 +476,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   }, [selection, playFromPosition])
 
   const handlePlaySelection = useCallback(() => {
-    if (!selection || !sampleSrc || !audioBuffer) return
+    if (!sampleSrc || !audioBuffer) return
 
     // Stop any currently playing audio and animation
     if (audioRef.current) {
@@ -489,13 +491,17 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const audio = new Audio(sampleSrc)
     audioRef.current = audio
 
+    // Use selection if exists, otherwise play full sample
+    const startTime = selection?.start ?? 0
+    const endTime = selection?.end ?? audioBuffer.duration
+
     const updatePlayhead = () => {
       if (!audioRef.current) return
 
       const currentTime = audioRef.current.currentTime
       setPlaybackPosition(currentTime / audioBuffer.duration)
 
-      if (currentTime >= selection.end) {
+      if (currentTime >= endTime) {
         audioRef.current.pause()
         audioRef.current = null
         setIsPlaying(false)
@@ -508,9 +514,9 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     }
 
     audio.addEventListener('loadedmetadata', () => {
-      audio.currentTime = selection.start
+      audio.currentTime = startTime
       setIsPlaying(true)
-      setPlaybackPosition(selection.start / audioBuffer.duration)
+      setPlaybackPosition(startTime / audioBuffer.duration)
       animationFrameRef.current = requestAnimationFrame(updatePlayhead)
     }, { once: true })
 
@@ -688,8 +694,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
           ) : (
             <button
               onClick={handlePlaySelection}
-              disabled={!selection}
-              className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80"
             >
               PLAY <span className="opacity-60">(SPACE)</span>
             </button>
