@@ -175,16 +175,52 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     }
   }, [sampleSrc])
 
-  // ESC key to exit edit mode
+  // Keyboard shortcuts: ESC to exit, Space to play/pause
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onExit()
+      } else if (e.key === " " && selection) {
+        e.preventDefault()
+        if (isPlaying) {
+          if (audioRef.current) {
+            audioRef.current.pause()
+            audioRef.current = null
+            setIsPlaying(false)
+            setPlaybackPosition(null)
+          }
+        } else {
+          // Trigger play
+          const audio = new Audio(sampleSrc)
+          audioRef.current = audio
+          audio.addEventListener('loadedmetadata', () => {
+            audio.currentTime = selection.start
+            setIsPlaying(true)
+            setPlaybackPosition(selection.start / (audioBuffer?.duration || 1))
+          }, { once: true })
+          const handleTimeUpdate = () => {
+            if (audioBuffer) {
+              setPlaybackPosition(audio.currentTime / audioBuffer.duration)
+            }
+            if (audio.currentTime >= selection.end) {
+              audio.pause()
+              setIsPlaying(false)
+              setPlaybackPosition(null)
+              audio.removeEventListener('timeupdate', handleTimeUpdate)
+            }
+          }
+          audio.addEventListener('timeupdate', handleTimeUpdate)
+          audio.addEventListener('ended', () => {
+            setIsPlaying(false)
+            setPlaybackPosition(null)
+          }, { once: true })
+          audio.play()
+        }
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [onExit])
+  }, [onExit, selection, isPlaying, sampleSrc, audioBuffer])
 
   useEffect(() => {
     if (!audioBuffer || !canvasRef.current) return
@@ -354,14 +390,14 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
                   onClick={handleStopPlayback}
                   className="rounded-[var(--r-btn)] bg-[var(--c-btn-red)] hover:brightness-110 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-all text-white"
                 >
-                  STOP
+                  STOP <span className="opacity-70">(SPC)</span>
                 </button>
               ) : (
                 <button
                   onClick={handlePlaySelection}
                   className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/80 hover:bg-[var(--lcd-text)] px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--c-lcd-bg)]"
                 >
-                  PLAY
+                  PLAY <span className="opacity-70">(SPC)</span>
                 </button>
               )}
               <button
@@ -376,7 +412,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
             onClick={onExit}
             className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/10 hover:bg-[var(--lcd-text)]/20 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
           >
-            EXIT
+            EXIT <span className="opacity-60">(ESC)</span>
           </button>
         </div>
       </div>
@@ -406,12 +442,13 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
               <div className="absolute -top-[0.3vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.3vw] border-r-[0.3vw] border-t-[0.4vw] border-l-transparent border-r-transparent border-t-[var(--lcd-text)]" />
             </div>
           )}
-          {selection && (
-            <div className="mt-[0.6vw] text-[0.65vw] text-[var(--lcd-text-dim)] text-center font-mono">
-              Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s (
-              {(selection.end - selection.start).toFixed(3)}s)
-            </div>
-          )}
+          <div className="mt-[0.6vw] text-[0.65vw] text-[var(--lcd-text-dim)] text-center font-mono h-[1.2vw]">
+            {selection ? (
+              <>Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s ({(selection.end - selection.start).toFixed(3)}s)</>
+            ) : (
+              <span className="opacity-40">Drag to select region</span>
+            )}
+          </div>
         </div>
       )}
     </div>

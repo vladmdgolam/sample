@@ -303,6 +303,30 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     }
   }, [])
 
+  // Page-level drag-drop for JSON config files
+  useEffect(() => {
+    const handleDocDragOver = (e: DragEvent) => {
+      e.preventDefault()
+    }
+
+    const handleDocDrop = (e: DragEvent) => {
+      e.preventDefault()
+      const files = Array.from(e.dataTransfer?.files || [])
+      const jsonFile = files.find(f => f.name.endsWith(".json"))
+      if (jsonFile) {
+        handleImportConfig(jsonFile)
+      }
+    }
+
+    document.addEventListener("dragover", handleDocDragOver)
+    document.addEventListener("drop", handleDocDrop)
+
+    return () => {
+      document.removeEventListener("dragover", handleDocDragOver)
+      document.removeEventListener("drop", handleDocDrop)
+    }
+  }, [handleImportConfig])
+
   return (
     <div
       className={classNames("basis-[100vw]", {
