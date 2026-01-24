@@ -142,6 +142,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null)
@@ -176,6 +177,74 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   }, [sampleSrc])
 
   // Keyboard shortcuts: ESC to exit, Space to play/pause
+  // Store refs to handlers for spacebar
+  const handlePlayRef = useRef<() => void>()
+  const handleStopRef = useRef<() => void>()
+
+  useEffect(() => {
+    handlePlayRef.current = () => {
+      if (!selection || !sampleSrc || !audioBuffer) return
+
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+
+      const audio = new Audio(sampleSrc)
+      audioRef.current = audio
+
+      const updatePlayhead = () => {
+        if (!audioRef.current) return
+        const currentTime = audioRef.current.currentTime
+        setPlaybackPosition(currentTime / audioBuffer.duration)
+        if (currentTime >= selection.end) {
+          audioRef.current.pause()
+          audioRef.current = null
+          setIsPlaying(false)
+          setPlaybackPosition(null)
+          animationFrameRef.current = null
+          return
+        }
+        animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+      }
+
+      audio.addEventListener('loadedmetadata', () => {
+        audio.currentTime = selection.start
+        setIsPlaying(true)
+        setPlaybackPosition(selection.start / audioBuffer.duration)
+        animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+      }, { once: true })
+
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current)
+          animationFrameRef.current = null
+        }
+      }, { once: true })
+
+      audio.play()
+    }
+
+    handleStopRef.current = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+      }
+    }
+  }, [selection, sampleSrc, audioBuffer])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -183,44 +252,15 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       } else if (e.key === " " && selection) {
         e.preventDefault()
         if (isPlaying) {
-          if (audioRef.current) {
-            audioRef.current.pause()
-            audioRef.current = null
-            setIsPlaying(false)
-            setPlaybackPosition(null)
-          }
+          handleStopRef.current?.()
         } else {
-          // Trigger play
-          const audio = new Audio(sampleSrc)
-          audioRef.current = audio
-          audio.addEventListener('loadedmetadata', () => {
-            audio.currentTime = selection.start
-            setIsPlaying(true)
-            setPlaybackPosition(selection.start / (audioBuffer?.duration || 1))
-          }, { once: true })
-          const handleTimeUpdate = () => {
-            if (audioBuffer) {
-              setPlaybackPosition(audio.currentTime / audioBuffer.duration)
-            }
-            if (audio.currentTime >= selection.end) {
-              audio.pause()
-              setIsPlaying(false)
-              setPlaybackPosition(null)
-              audio.removeEventListener('timeupdate', handleTimeUpdate)
-            }
-          }
-          audio.addEventListener('timeupdate', handleTimeUpdate)
-          audio.addEventListener('ended', () => {
-            setIsPlaying(false)
-            setPlaybackPosition(null)
-          }, { once: true })
-          audio.play()
+          handlePlayRef.current?.()
         }
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [onExit, selection, isPlaying, sampleSrc, audioBuffer])
+  }, [onExit, selection, isPlaying])
 
   useEffect(() => {
     if (!audioBuffer || !canvasRef.current) return
@@ -309,46 +349,61 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   const handlePlaySelection = useCallback(() => {
     if (!selection || !sampleSrc || !audioBuffer) return
 
-    // Stop any currently playing audio
+    // Stop any currently playing audio and animation
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
     }
 
     const audio = new Audio(sampleSrc)
     audioRef.current = audio
 
+    const updatePlayhead = () => {
+      if (!audioRef.current) return
+
+      const currentTime = audioRef.current.currentTime
+      setPlaybackPosition(currentTime / audioBuffer.duration)
+
+      if (currentTime >= selection.end) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+        animationFrameRef.current = null
+        return
+      }
+
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+    }
+
     audio.addEventListener('loadedmetadata', () => {
       audio.currentTime = selection.start
       setIsPlaying(true)
       setPlaybackPosition(selection.start / audioBuffer.duration)
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
     }, { once: true })
 
-    const handleTimeUpdate = () => {
-      // Update playhead position
-      setPlaybackPosition(audio.currentTime / audioBuffer.duration)
-
-      if (audio.currentTime >= selection.end) {
-        audio.pause()
-        setIsPlaying(false)
-        setPlaybackPosition(null)
-        audio.removeEventListener('timeupdate', handleTimeUpdate)
-      }
-    }
-
-    const handleEnded = () => {
+    audio.addEventListener('ended', () => {
       setIsPlaying(false)
       setPlaybackPosition(null)
-      audio.removeEventListener('timeupdate', handleTimeUpdate)
-      audio.removeEventListener('ended', handleEnded)
-    }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+    }, { once: true })
 
-    audio.addEventListener('timeupdate', handleTimeUpdate)
-    audio.addEventListener('ended', handleEnded)
     audio.play()
   }, [selection, sampleSrc, audioBuffer])
 
   const handleStopPlayback = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
@@ -366,6 +421,9 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
 
   useEffect(() => {
     return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current = null
