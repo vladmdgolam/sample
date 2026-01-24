@@ -140,6 +140,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   onApply,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const animationFrameRef = useRef<number | null>(null)
@@ -150,6 +151,29 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   const [dragStart, setDragStart] = useState<number | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackPosition, setPlaybackPosition] = useState<number | null>(null)
+
+  // Zoom and pan state
+  const [zoom, setZoom] = useState(1)
+  const [panOffset, setPanOffset] = useState(0) // 0-1 range, represents the start of visible area
+  const lastTouchDistanceRef = useRef<number | null>(null)
+  const lastTouchCenterRef = useRef<number | null>(null)
+
+  // Convert screen X position to time (accounting for zoom/pan)
+  const screenToTime = useCallback((screenX: number, rect: DOMRect) => {
+    if (!audioBuffer) return 0
+    const visibleDuration = audioBuffer.duration / zoom
+    const visibleStart = panOffset * audioBuffer.duration
+    const relativeX = screenX / rect.width
+    return visibleStart + relativeX * visibleDuration
+  }, [audioBuffer, zoom, panOffset])
+
+  // Convert time to screen X position (accounting for zoom/pan)
+  const timeToScreen = useCallback((time: number) => {
+    if (!audioBuffer) return 0
+    const visibleDuration = audioBuffer.duration / zoom
+    const visibleStart = panOffset * audioBuffer.duration
+    return ((time - visibleStart) / visibleDuration)
+  }, [audioBuffer, zoom, panOffset])
 
   useEffect(() => {
     const loadAudio = async () => {
@@ -279,8 +303,18 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const width = canvas.width
     const height = canvas.height
     const data = audioBuffer.getChannelData(0)
-    const step = Math.ceil(data.length / width)
     const amp = height / 2
+
+    // Calculate visible range based on zoom and pan
+    const visibleDuration = audioBuffer.duration / zoom
+    const visibleStart = panOffset * audioBuffer.duration
+    const visibleEnd = visibleStart + visibleDuration
+
+    // Calculate which samples to draw
+    const startSample = Math.floor((visibleStart / audioBuffer.duration) * data.length)
+    const endSample = Math.ceil((visibleEnd / audioBuffer.duration) * data.length)
+    const visibleSamples = endSample - startSample
+    const step = Math.ceil(visibleSamples / width)
 
     // Dark green LCD background (retro edit mode)
     ctx.fillStyle = "#002F24"
@@ -291,32 +325,100 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
+      const sampleStart = startSample + Math.floor((i / width) * visibleSamples)
       for (let j = 0; j < step; j++) {
-        const datum = data[i * step + j]
-        if (datum < min) min = datum
-        if (datum > max) max = datum
+        const datum = data[sampleStart + j]
+        if (datum !== undefined) {
+          if (datum < min) min = datum
+          if (datum > max) max = datum
+        }
       }
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
     // Draw selection with LCD green highlight
     if (selection) {
-      const startX = (selection.start / audioBuffer.duration) * width
-      const endX = (selection.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(127, 255, 178, 0.3)"
-      ctx.fillRect(startX, 0, endX - startX, height)
+      const startX = timeToScreen(selection.start) * width
+      const endX = timeToScreen(selection.end) * width
 
-      // Draw selection borders
-      ctx.strokeStyle = "rgba(127, 255, 178, 0.8)"
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(startX, 0)
-      ctx.lineTo(startX, height)
-      ctx.moveTo(endX, 0)
-      ctx.lineTo(endX, height)
-      ctx.stroke()
+      // Only draw if selection is visible
+      if (endX >= 0 && startX <= width) {
+        const clampedStartX = Math.max(0, startX)
+        const clampedEndX = Math.min(width, endX)
+
+        ctx.fillStyle = "rgba(127, 255, 178, 0.3)"
+        ctx.fillRect(clampedStartX, 0, clampedEndX - clampedStartX, height)
+
+        // Draw selection borders
+        ctx.strokeStyle = "rgba(127, 255, 178, 0.8)"
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        if (startX >= 0 && startX <= width) {
+          ctx.moveTo(startX, 0)
+          ctx.lineTo(startX, height)
+        }
+        if (endX >= 0 && endX <= width) {
+          ctx.moveTo(endX, 0)
+          ctx.lineTo(endX, height)
+        }
+        ctx.stroke()
+      }
     }
-  }, [audioBuffer, selection])
+  }, [audioBuffer, selection, zoom, panOffset, timeToScreen])
+
+  // Play from a specific time position to the end (or selection end if within selection)
+  const playFromPosition = useCallback((startTime: number) => {
+    if (!sampleSrc || !audioBuffer) return
+
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+
+    const audio = new Audio(sampleSrc)
+    audioRef.current = audio
+
+    const endTime = audioBuffer.duration
+
+    const updatePlayhead = () => {
+      if (!audioRef.current) return
+      const currentTime = audioRef.current.currentTime
+      setPlaybackPosition(currentTime / audioBuffer.duration)
+
+      if (currentTime >= endTime) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setIsPlaying(false)
+        setPlaybackPosition(null)
+        animationFrameRef.current = null
+        return
+      }
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+    }
+
+    audio.addEventListener('loadedmetadata', () => {
+      audio.currentTime = startTime
+      setIsPlaying(true)
+      setPlaybackPosition(startTime / audioBuffer.duration)
+      animationFrameRef.current = requestAnimationFrame(updatePlayhead)
+    }, { once: true })
+
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false)
+      setPlaybackPosition(null)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+    }, { once: true })
+
+    audio.play()
+  }, [sampleSrc, audioBuffer])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -324,13 +426,16 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
 
       const rect = canvasRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left
-      const time = (x / rect.width) * audioBuffer.duration
+      const time = screenToTime(x, rect)
+
+      // Clamp to valid range
+      const clampedTime = Math.max(0, Math.min(audioBuffer.duration, time))
 
       setIsDragging(true)
-      setDragStart(time)
-      setSelection({ start: time, end: time })
+      setDragStart(clampedTime)
+      setSelection({ start: clampedTime, end: clampedTime })
     },
-    [audioBuffer]
+    [audioBuffer, screenToTime]
   )
 
   const handleMouseMove = useCallback(
@@ -339,19 +444,27 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
 
       const rect = canvasRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left
-      const time = (x / rect.width) * audioBuffer.duration
+      const time = screenToTime(x, rect)
+
+      // Clamp to valid range
+      const clampedTime = Math.max(0, Math.min(audioBuffer.duration, time))
 
       setSelection({
-        start: Math.min(dragStart, time),
-        end: Math.max(dragStart, time),
+        start: Math.min(dragStart, clampedTime),
+        end: Math.max(dragStart, clampedTime),
       })
     },
-    [isDragging, audioBuffer, dragStart]
+    [isDragging, audioBuffer, dragStart, screenToTime]
   )
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false)
-  }, [])
+
+    // If it's a point selection (click without drag), play from that position
+    if (selection && Math.abs(selection.end - selection.start) < 0.01) {
+      playFromPosition(selection.start)
+    }
+  }, [selection, playFromPosition])
 
   const handlePlaySelection = useCallback(() => {
     if (!selection || !sampleSrc || !audioBuffer) return
@@ -426,6 +539,97 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     onApply(padKey, selection)
   }, [selection, audioBuffer, onApply, padKey, handleStopPlayback])
 
+  // Wheel zoom (trackpad pinch or mouse wheel with ctrl/cmd)
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (!audioBuffer || !containerRef.current) return
+
+    // Check if it's a pinch gesture (ctrlKey is true for trackpad pinch)
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+
+      const rect = containerRef.current.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseRatio = mouseX / rect.width
+
+      // Calculate the time at mouse position before zoom
+      const visibleDuration = audioBuffer.duration / zoom
+      const visibleStart = panOffset * audioBuffer.duration
+      const timeAtMouse = visibleStart + mouseRatio * visibleDuration
+
+      // Adjust zoom (negative deltaY = zoom in)
+      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1
+      const newZoom = Math.max(1, Math.min(50, zoom * zoomDelta))
+
+      // Calculate new pan to keep mouse position stable
+      const newVisibleDuration = audioBuffer.duration / newZoom
+      const newVisibleStart = timeAtMouse - mouseRatio * newVisibleDuration
+      const maxPan = 1 - 1 / newZoom
+      const newPan = Math.max(0, Math.min(maxPan, newVisibleStart / audioBuffer.duration))
+
+      setZoom(newZoom)
+      setPanOffset(newPan)
+    } else if (zoom > 1) {
+      // Regular scroll = pan when zoomed in
+      e.preventDefault()
+      const panDelta = e.deltaX !== 0 ? e.deltaX : e.deltaY
+      const panAmount = (panDelta / 500) / zoom
+      const maxPan = 1 - 1 / zoom
+      setPanOffset(prev => Math.max(0, Math.min(maxPan, prev + panAmount)))
+    }
+  }, [audioBuffer, zoom, panOffset])
+
+  // Touch handlers for pinch-to-zoom
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY)
+      const centerX = (touch1.clientX + touch2.clientX) / 2
+      lastTouchDistanceRef.current = distance
+      lastTouchCenterRef.current = centerX
+    }
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && lastTouchDistanceRef.current !== null && containerRef.current && audioBuffer) {
+      e.preventDefault()
+
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY)
+      const centerX = (touch1.clientX + touch2.clientX) / 2
+
+      const rect = containerRef.current.getBoundingClientRect()
+      const centerRatio = (centerX - rect.left) / rect.width
+
+      // Calculate the time at center before zoom
+      const visibleDuration = audioBuffer.duration / zoom
+      const visibleStart = panOffset * audioBuffer.duration
+      const timeAtCenter = visibleStart + centerRatio * visibleDuration
+
+      // Calculate zoom change
+      const scale = distance / lastTouchDistanceRef.current
+      const newZoom = Math.max(1, Math.min(50, zoom * scale))
+
+      // Calculate new pan to keep pinch center stable
+      const newVisibleDuration = audioBuffer.duration / newZoom
+      const newVisibleStart = timeAtCenter - centerRatio * newVisibleDuration
+      const maxPan = 1 - 1 / newZoom
+      const newPan = Math.max(0, Math.min(maxPan, newVisibleStart / audioBuffer.duration))
+
+      setZoom(newZoom)
+      setPanOffset(newPan)
+
+      lastTouchDistanceRef.current = distance
+      lastTouchCenterRef.current = centerX
+    }
+  }, [audioBuffer, zoom, panOffset])
+
+  const handleTouchEnd = useCallback(() => {
+    lastTouchDistanceRef.current = null
+    lastTouchCenterRef.current = null
+  }, [])
+
   useEffect(() => {
     return () => {
       if (animationFrameRef.current) {
@@ -486,7 +690,14 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
           Loading...
         </div>
       ) : (
-        <div className="relative">
+        <div
+          ref={containerRef}
+          className="relative"
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <canvas
             ref={canvasRef}
             width={800}
@@ -498,19 +709,29 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
             onMouseLeave={handleMouseUp}
           />
           {/* Playhead indicator */}
-          {playbackPosition !== null && (
-            <div
-              className="absolute top-0 h-[10vw] w-[2px] bg-[var(--lcd-text)] pointer-events-none"
-              style={{ left: `${playbackPosition * 100}%` }}
-            >
-              <div className="absolute -top-[0.3vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.3vw] border-r-[0.3vw] border-t-[0.4vw] border-l-transparent border-r-transparent border-t-[var(--lcd-text)]" />
-            </div>
-          )}
-          <div className="mt-[0.6vw] text-[0.65vw] text-[var(--lcd-text-dim)] text-center font-mono h-[1.2vw]">
+          {playbackPosition !== null && (() => {
+            const screenPos = timeToScreen(playbackPosition * (audioBuffer?.duration || 1))
+            // Only show if playhead is in visible range
+            if (screenPos >= 0 && screenPos <= 1) {
+              return (
+                <div
+                  className="absolute top-0 h-[10vw] w-[2px] bg-[var(--lcd-text)] pointer-events-none"
+                  style={{ left: `${screenPos * 100}%` }}
+                >
+                  <div className="absolute -top-[0.3vw] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[0.3vw] border-r-[0.3vw] border-t-[0.4vw] border-l-transparent border-r-transparent border-t-[var(--lcd-text)]" />
+                </div>
+              )
+            }
+            return null
+          })()}
+          <div className="mt-[0.6vw] text-[0.65vw] text-[var(--lcd-text-dim)] text-center font-mono h-[1.2vw] flex items-center justify-center gap-[1vw]">
             {selection ? (
               <>Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s ({(selection.end - selection.start).toFixed(3)}s)</>
             ) : (
               <span className="opacity-40">Drag to select region</span>
+            )}
+            {zoom > 1 && (
+              <span className="opacity-60">Zoom: {zoom.toFixed(1)}x</span>
             )}
           </div>
         </div>
