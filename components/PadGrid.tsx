@@ -311,6 +311,18 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
             className="underline hover:opacity-80 transition-opacity"
           >Vlad</a>
         </div>
+        {/* Instructions */}
+        <div className="hidden md:block" /> {/* Spacer for first column */}
+        <div className="hidden md:flex items-center gap-[1vw] text-[0.65vw] text-[var(--c-text-dark)] opacity-50 pt-[0.3vw]">
+          <span className="flex items-center gap-[0.3vw]">
+            <kbd className="px-[0.4vw] py-[0.15vw] rounded-[0.2vw] bg-[var(--c-chassis-dark)] border border-[rgba(0,0,0,0.1)] font-mono text-[0.55vw] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd>
+            <span>show tips</span>
+          </span>
+          <span className="flex items-center gap-[0.3vw]">
+            <kbd className="px-[0.4vw] py-[0.15vw] rounded-[0.2vw] bg-[var(--c-chassis-dark)] border border-[rgba(0,0,0,0.1)] font-mono text-[0.55vw] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Right Click</kbd>
+            <span>edit mode</span>
+          </span>
+        </div>
       </div>
     </div>
   )
