@@ -618,16 +618,16 @@ export const WaveformEditor: FC<WaveformEditorProps> = ({
 
   return (
     <div className="edit-mode rounded-[0.4vw] border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1.1vw] text-[var(--lcd-text)] shadow-perfect-sm">
-      <div className="flex items-center justify-between mb-[0.9vw]">
-        <div className="flex items-center gap-[0.6vw]">
-          <span className="text-[0.65vw] text-[var(--lcd-text)] font-mono truncate max-w-[15vw]">
+      <div className="flex items-center justify-between mb-[0.9vw] gap-[1vw]">
+        <div className="flex items-center gap-[0.6vw] min-w-0 overflow-hidden flex-shrink">
+          <span className="text-[0.65vw] text-[var(--lcd-text)] font-mono truncate">
             {sampleName || decodeURIComponent(sampleSrc.split("/").pop() ?? "").replace(/\.[^/.]+$/, "")}
           </span>
           {audioBuffer && (
-            <span className="text-[0.65vw] text-[var(--lcd-text-dim)] font-mono">{audioBuffer.duration.toFixed(2)}s</span>
+            <span className="text-[0.65vw] text-[var(--lcd-text-dim)] font-mono flex-shrink-0">{audioBuffer.duration.toFixed(2)}s</span>
           )}
         </div>
-        <div className="flex gap-[0.6vw]">
+        <div className="flex gap-[0.6vw] flex-shrink-0">
           {isPlaying ? (
             <button
               onClick={handleStopPlayback}
