@@ -44,7 +44,11 @@ const formatLabel = (path: string) => {
 export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDark = false }) => {
   const [showTips, setShowTips] = useState(false)
   const [playingTracks, setPlayingTracks] = useState<PlayingTrack[]>([])
-  const [editMode, setEditMode] = useState<{ padKey: string; sampleSrc: string; existingChop?: { start: number; end: number } } | null>(null)
+  const [editMode, setEditMode] = useState<{
+    padKey: string
+    sampleSrc: string
+    existingChop?: { start: number; end: number }
+  } | null>(null)
   const [sampleChops, setSampleChops] = useState<Record<string, { start: number; end: number }>>({})
   const [customSamples, setCustomSamples] = useState<Record<string, { url: string; name: string }>>(
     {},
@@ -198,9 +202,12 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     [],
   )
 
-  const handleEnterEditMode = useCallback((padKey: string, sampleSrc: string) => {
-    setEditMode({ padKey, sampleSrc, existingChop: sampleChops[padKey] })
-  }, [sampleChops])
+  const handleEnterEditMode = useCallback(
+    (padKey: string, sampleSrc: string) => {
+      setEditMode({ padKey, sampleSrc, existingChop: sampleChops[padKey] })
+    },
+    [sampleChops],
+  )
 
   const handleFileDrop = useCallback(
     (startPadKey: string, files: File[]) => {
@@ -444,15 +451,14 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                 </span>
                 •
                 <span className="flex items-center gap-[0.25vw]">
-                  <span>drag and drop a file to upload a sample</span>
+                  <span>drop a file on a pad</span>
                 </span>
                 {Object.keys(sampleChops).length > 0 && (
                   <button
                     onClick={handleExportConfig}
                     className="flex items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
                   >
-                    <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">↓</Kbd>
-                    <span>export</span>
+                    <span>export as json</span>
                   </button>
                 )}
               </div>
