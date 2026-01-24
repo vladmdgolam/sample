@@ -337,19 +337,34 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const maxs: number[] = []
 
     for (let i = 0; i < width; i++) {
-      let min = 1.0
-      let max = -1.0
-      const sampleStart = startSample + Math.floor((i / width) * visibleSamples)
-      const sampleEnd = startSample + Math.floor(((i + 1) / width) * visibleSamples)
-      const actualStep = Math.max(1, sampleEnd - sampleStart)
+      // Calculate the exact sample position for this pixel
+      const exactSamplePos = startSample + (i / width) * visibleSamples
+      const sampleIdx = Math.floor(exactSamplePos)
+      const nextSampleIdx = Math.min(sampleIdx + 1, data.length - 1)
+      const fraction = exactSamplePos - sampleIdx
 
-      for (let j = 0; j < actualStep; j++) {
-        const datum = data[sampleStart + j]
-        if (datum !== undefined) {
-          if (datum < min) min = datum
-          if (datum > max) max = datum
-        }
+      // Clamp to valid range
+      const clampedIdx = Math.max(0, Math.min(data.length - 1, sampleIdx))
+      const clampedNextIdx = Math.max(0, Math.min(data.length - 1, nextSampleIdx))
+
+      // Interpolate between samples for smooth appearance when zoomed in
+      const currentSample = data[clampedIdx] ?? 0
+      const nextSample = data[clampedNextIdx] ?? 0
+      const interpolated = currentSample + (nextSample - currentSample) * fraction
+
+      // For the min/max, also check neighboring samples to avoid gaps
+      const sampleRangeStart = Math.max(0, Math.floor(startSample + (i / width) * visibleSamples))
+      const sampleRangeEnd = Math.max(sampleRangeStart + 1, Math.ceil(startSample + ((i + 1) / width) * visibleSamples))
+
+      let min = interpolated
+      let max = interpolated
+
+      for (let s = sampleRangeStart; s < sampleRangeEnd && s < data.length; s++) {
+        const datum = data[s]
+        if (datum < min) min = datum
+        if (datum > max) max = datum
       }
+
       mins.push(min)
       maxs.push(max)
     }
