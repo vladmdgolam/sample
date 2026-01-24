@@ -249,18 +249,25 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onExit()
-      } else if (e.key === " " && selection) {
+      } else if (e.key === " ") {
         e.preventDefault()
-        if (isPlaying) {
-          handleStopRef.current?.()
-        } else {
-          handlePlayRef.current?.()
+        e.stopPropagation()
+        if (selection) {
+          if (isPlaying) {
+            handleStopRef.current?.()
+          } else {
+            handlePlayRef.current?.()
+          }
         }
+      } else if (e.key === "Enter" && selection) {
+        e.preventDefault()
+        handleStopRef.current?.()
+        onApply(padKey, selection)
       }
     }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [onExit, selection, isPlaying])
+    window.addEventListener("keydown", handleKeyDown, true)
+    return () => window.removeEventListener("keydown", handleKeyDown, true)
+  }, [onExit, selection, isPlaying, onApply, padKey])
 
   useEffect(() => {
     if (!audioBuffer || !canvasRef.current) return
@@ -462,7 +469,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
               onClick={handleApplyChop}
               className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/20 hover:bg-[var(--lcd-text)]/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
             >
-              APPLY
+              APPLY <span className="opacity-60">(Enter)</span>
             </button>
           )}
           <button
