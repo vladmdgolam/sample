@@ -873,7 +873,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
   }
   return (
     <div className="hidden md:block relative">
-      <div className="absolute inset-0 rounded-none bg-[var(--c-lcd-bg)] p-[1vw] shadow-[inset_0_0px_16px_rgba(0,0,0,0.7)] flex flex-col overflow-hidden">
+      <div className="absolute inset-0 rounded-[0.4vw] bg-[var(--c-lcd-bg)] p-[1vw] shadow-[inset_0_0px_16px_rgba(0,0,0,0.7)] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between text-[0.6vw] uppercase tracking-[0.2em] text-[var(--lcd-text)] font-mono flex-shrink-0">
           <span>NOW PLAYING</span>
           <span>{tracks.length.toString().padStart(2, "0")}</span>
