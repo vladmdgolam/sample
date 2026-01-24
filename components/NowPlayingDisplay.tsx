@@ -287,6 +287,13 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
         e.preventDefault()
         handleStopRef.current?.()
         onApply(padKey, selection)
+      } else if (e.key === "r" || e.key === "R") {
+        e.preventDefault()
+        // Reset zoom, pan, and selection
+        setZoom(1)
+        setPanOffset(0)
+        setSelection(null)
+        handleStopRef.current?.()
       }
     }
     window.addEventListener("keydown", handleKeyDown, true)
@@ -693,6 +700,19 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
               className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/20 hover:bg-[var(--lcd-text)]/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
             >
               APPLY <span className="opacity-60">(Enter)</span>
+            </button>
+          )}
+          {(selection || zoom > 1) && (
+            <button
+              onClick={() => {
+                setZoom(1)
+                setPanOffset(0)
+                setSelection(null)
+                handleStopPlayback()
+              }}
+              className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80"
+            >
+              RESET <span className="opacity-60">(R)</span>
             </button>
           )}
           <button
