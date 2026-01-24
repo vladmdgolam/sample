@@ -1,13 +1,13 @@
 // 4x4 grid mapped to keyboard layout:
-// [1] [2] [3] [4]
-// [Q] [W] [E] [R]
-// [A] [S] [D] [F]
-// [Z] [X] [C] [V]
+// [4] [5] [6] [7]
+// [R] [T] [Y] [U]
+// [F] [G] [H] [J]
+// [V] [B] [N] [M]
 export const padKeys = [
-  "1", "2", "3", "4",
-  "q", "w", "e", "r",
-  "a", "s", "d", "f",
-  "z", "x", "c", "v",
+  "4", "5", "6", "7",
+  "r", "t", "y", "u",
+  "f", "g", "h", "j",
+  "v", "b", "n", "m",
 ]
 
 export const allKeys = [
