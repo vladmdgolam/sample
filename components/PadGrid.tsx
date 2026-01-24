@@ -47,6 +47,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
   const [editMode, setEditMode] = useState<{
     padKey: string
     sampleSrc: string
+    sampleName?: string
     existingChop?: { start: number; end: number }
   } | null>(null)
   const [sampleChops, setSampleChops] = useState<Record<string, { start: number; end: number }>>({})
@@ -204,9 +205,14 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
 
   const handleEnterEditMode = useCallback(
     (padKey: string, sampleSrc: string) => {
-      setEditMode({ padKey, sampleSrc, existingChop: sampleChops[padKey] })
+      setEditMode({
+        padKey,
+        sampleSrc,
+        sampleName: customSamples[padKey]?.name,
+        existingChop: sampleChops[padKey],
+      })
     },
-    [sampleChops],
+    [sampleChops, customSamples],
   )
 
   const handleFileDrop = useCallback(
@@ -454,12 +460,15 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                   <span>drop a file on a pad</span>
                 </span>
                 {Object.keys(sampleChops).length > 0 && (
-                  <button
-                    onClick={handleExportConfig}
-                    className="flex items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
-                  >
-                    <span>export as json</span>
-                  </button>
+                  <>
+                    •
+                    <button
+                      onClick={handleExportConfig}
+                      className="flex items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
+                    >
+                      <span>export</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>

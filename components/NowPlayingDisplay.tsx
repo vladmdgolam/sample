@@ -17,6 +17,7 @@ interface NowPlayingTrack {
 interface EditMode {
   padKey: string
   sampleSrc: string
+  sampleName?: string
   existingChop?: { start: number; end: number }
 }
 
@@ -136,12 +137,14 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
 
 const WaveformEditor: FC<{
   sampleSrc: string
+  sampleName?: string
   padKey: string
   initialChop?: { start: number; end: number }
   onExit: () => void
   onApply: (padKey: string, selection: { start: number; end: number }) => void
 }> = ({
   sampleSrc,
+  sampleName,
   padKey,
   initialChop,
   onExit,
@@ -751,7 +754,7 @@ const WaveformEditor: FC<{
             {padKey.toUpperCase()}
           </div>
           <span className="text-[0.65vw] text-[var(--lcd-text)] font-mono truncate max-w-[15vw]">
-            {decodeURIComponent(sampleSrc.split("/").pop() ?? "").replace(/\.[^/.]+$/, "")}
+            {sampleName || decodeURIComponent(sampleSrc.split("/").pop() ?? "").replace(/\.[^/.]+$/, "")}
           </span>
           {audioBuffer && (
             <span className="text-[0.65vw] text-[var(--lcd-text-dim)] font-mono">{audioBuffer.duration.toFixed(2)}s</span>
@@ -846,7 +849,7 @@ const WaveformEditor: FC<{
             {selection ? (
               <>Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s ({(selection.end - selection.start).toFixed(3)}s)</>
             ) : (
-              <span className="opacity-40">
+              <span className="opacity-70">
                 Drag to select • Pinch to zoom{zoom > 1 && " • Scroll to pan"}
               </span>
             )}
@@ -864,7 +867,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
   if (editMode && onExitEditMode && onApplyEdit) {
     return (
       <div className="col-span-2">
-        <WaveformEditor sampleSrc={editMode.sampleSrc} padKey={editMode.padKey} initialChop={editMode.existingChop} onExit={onExitEditMode} onApply={onApplyEdit} />
+        <WaveformEditor sampleSrc={editMode.sampleSrc} sampleName={editMode.sampleName} padKey={editMode.padKey} initialChop={editMode.existingChop} onExit={onExitEditMode} onApply={onApplyEdit} />
       </div>
     )
   }

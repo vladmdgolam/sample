@@ -308,12 +308,12 @@ const PadComponent: React.FC<PadProps> = ({
           </div>
         )}
         {chop && (
-          <div className="absolute top-[0.3vw] right-[0.3vw] bg-[#C9847A]/90 text-white px-[0.4vw] py-[0.1vw] rounded-[0.15vw] text-[0.4vw] font-bold uppercase tracking-wider">
+          <div className="absolute top-[1vw] md:top-[0.3vw] right-[1vw] md:right-[0.3vw] bg-[#C9847A]/90 text-white px-[1.5vw] md:px-[0.4vw] py-[0.4vw] md:py-[0.1vw] rounded-[0.5vw] md:rounded-[0.15vw] text-[1.8vw] md:text-[0.4vw] font-bold uppercase tracking-wider">
             CHOPPED
           </div>
         )}
         {(showTips || customSampleName) && (
-          <div className="absolute bottom-[0.3vw] left-[0.3vw] right-[0.3vw] bg-black/70 text-white/90 px-[0.4vw] py-[0.15vw] rounded-[0.15vw] text-[0.45vw] font-mono truncate text-center">
+          <div className="absolute bottom-[1vw] md:bottom-[0.3vw] left-[1vw] md:left-[0.3vw] right-[1vw] md:right-[0.3vw] bg-black/70 text-white/90 px-[1.5vw] md:px-[0.4vw] py-[0.5vw] md:py-[0.15vw] rounded-[0.5vw] md:rounded-[0.15vw] text-[2vw] md:text-[0.45vw] font-mono truncate text-center">
             {customSampleName || sampleSrc.split("/").pop()?.replace(/\.[^/.]+$/, "")}
           </div>
         )}
