@@ -186,6 +186,15 @@ body {
 }
 
 
+/* Edit mode - retro green LCD */
+.edit-mode {
+  --lcd-bg: #003D2E;
+  --lcd-text: #7FFFB2;
+  --lcd-text-dim: #3D8C6A;
+  --c-lcd-bezel: #1A5C47;
+  --c-lcd-bg: #003D2E;
+}
+
 .pads_grid {
   grid-template-rows: repeat(4, minmax(0, 1fr));
   gap: 0.6vw;

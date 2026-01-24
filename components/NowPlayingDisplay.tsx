@@ -188,12 +188,12 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const step = Math.ceil(data.length / width)
     const amp = height / 2
 
-    // Warm LCD background
-    ctx.fillStyle = "#C9BDA8"
+    // Dark green LCD background (retro edit mode)
+    ctx.fillStyle = "#002F24"
     ctx.fillRect(0, 0, width, height)
 
-    // Draw waveform in warm LCD color
-    ctx.fillStyle = "#8B8073"
+    // Draw waveform in dim LCD green
+    ctx.fillStyle = "#3D8C6A"
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
@@ -205,15 +205,15 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
-    // Draw selection with warm highlight
+    // Draw selection with LCD green highlight
     if (selection) {
       const startX = (selection.start / audioBuffer.duration) * width
       const endX = (selection.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(212, 165, 116, 0.35)"
+      ctx.fillStyle = "rgba(127, 255, 178, 0.3)"
       ctx.fillRect(startX, 0, endX - startX, height)
 
       // Draw selection borders
-      ctx.strokeStyle = "rgba(212, 165, 116, 0.9)"
+      ctx.strokeStyle = "rgba(127, 255, 178, 0.8)"
       ctx.lineWidth = 2
       ctx.beginPath()
       ctx.moveTo(startX, 0)
@@ -327,7 +327,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   }, [])
 
   return (
-    <div className="rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1.1vw] text-[var(--lcd-text)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]">
+    <div className="edit-mode rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1.1vw] text-[var(--lcd-text)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]">
       <div className="flex items-center justify-between mb-[0.9vw]">
         <div className="flex items-center gap-[0.6vw]">
           <div className="rounded-[0.3vw] bg-[var(--lcd-text)]/20 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-mono font-semibold tracking-[0.2em]">
