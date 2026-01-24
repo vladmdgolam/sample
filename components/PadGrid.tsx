@@ -319,6 +319,9 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       if (event.key === " ") {
         event.preventDefault() // Prevent spacebar from scrolling the page
         setShowTips((prev) => !prev)
+      } else if (event.key === "ArrowDown" && Object.keys(sampleChops).length > 0) {
+        event.preventDefault()
+        handleExportConfig()
       }
     }
 
@@ -327,7 +330,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [])
+  }, [sampleChops, handleExportConfig])
 
   useEffect(() => {
     return () => {
