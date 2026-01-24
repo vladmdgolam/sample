@@ -421,6 +421,10 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                   <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
                   <span>edit</span>
                 </span>
+                <span className="flex items-center gap-[0.25vw]">
+                  <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">DnD</Kbd>
+                  <span>load sample</span>
+                </span>
                 {Object.keys(sampleChops).length > 0 && (
                   <button
                     onClick={handleExportConfig}
