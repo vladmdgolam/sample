@@ -3,6 +3,7 @@
 
 import type { FC } from "react"
 import { useEffect, useRef, useState } from "react"
+
 import { WaveformEditor } from "./WaveformEditor"
 
 interface NowPlayingTrack {
@@ -34,7 +35,11 @@ const formatPercent = (value: number) => {
   return `${Math.min(Math.round(value * 100), 100)}%`
 }
 
-const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: number; end: number } }> = ({ sampleSrc, progress, chop }) => {
+const MiniWaveform: FC<{
+  sampleSrc: string
+  progress: number
+  chop?: { start: number; end: number }
+}> = ({ sampleSrc, progress, chop }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const audioBufferRef = useRef<AudioBuffer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -117,12 +122,7 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
 
   return (
     <div className="relative w-full h-[1.5vw]">
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={120}
-        className="w-full h-full rounded-[0.2vw]"
-      />
+      <canvas ref={canvasRef} width={800} height={120} className="w-full h-full rounded-[0.2vw]" />
       {/* Playhead indicator */}
       {progress > 0 && progress < 1 && (
         <div
@@ -136,11 +136,23 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
   )
 }
 
-export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode, onExitEditMode, onApplyEdit }) => {
+export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({
+  tracks,
+  editMode,
+  onExitEditMode,
+  onApplyEdit,
+}) => {
   if (editMode && onExitEditMode && onApplyEdit) {
     return (
       <div className="col-span-2">
-        <WaveformEditor sampleSrc={editMode.sampleSrc} sampleName={editMode.sampleName} padKey={editMode.padKey} initialChop={editMode.existingChop} onExit={onExitEditMode} onApply={onApplyEdit} />
+        <WaveformEditor
+          sampleSrc={editMode.sampleSrc}
+          sampleName={editMode.sampleName}
+          padKey={editMode.padKey}
+          initialChop={editMode.existingChop}
+          onExit={onExitEditMode}
+          onApply={onApplyEdit}
+        />
       </div>
     )
   }
@@ -152,29 +164,31 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
           <span>{tracks.length.toString().padStart(2, "0")}</span>
         </div>
         <div className="mt-[0.8vw] grid gap-[0.5vw] overflow-y-auto flex-1 min-h-0 content-start">
-        {tracks.length === 0 ? (
-          <div className="flex items-center justify-center rounded-[0.2vw] border border-dashed border-[var(--lcd-text-dim)] py-[1.2vw] text-[0.7vw] uppercase tracking-[0.15em] text-[var(--lcd-text-dim)] font-mono">
-            READY
-          </div>
-        ) : (
-          tracks.map((track) => {
-            const percent = Math.min(track.progress, 1)
-            return (
-              <div key={track.id} className="flex flex-col gap-[0.3vw] min-w-0">
-                <div className="flex items-center justify-between gap-[0.5vw] min-w-0">
-                  <div className="rounded-[0.2vw] bg-[var(--lcd-text)]/20 px-[0.5vw] py-[0.2vw] text-[0.6vw] font-mono font-bold tracking-[0.15em] text-[var(--lcd-text)] flex-shrink-0">
+          {tracks.length === 0 ? (
+            <div className="flex items-center justify-center rounded-[0.2vw] border border-dashed border-[var(--lcd-text-dim)] py-[1.2vw] text-[0.7vw] uppercase tracking-[0.15em] text-[var(--lcd-text-dim)] font-mono">
+              READY
+            </div>
+          ) : (
+            tracks.map((track) => {
+              const percent = Math.min(track.progress, 1)
+              return (
+                <div key={track.id} className="flex flex-col gap-[0.3vw] min-w-0">
+                  <div className="flex items-center justify-between gap-[0.5vw] min-w-0">
+                    {/* <div className="rounded-[0.2vw] bg-[var(--lcd-text)]/20 px-[0.5vw] py-[0.2vw] text-[0.6vw] font-mono font-bold tracking-[0.15em] text-[var(--lcd-text)] flex-shrink-0">
                     {track.padKey.toUpperCase()}
+                  </div> */}
+                    <div className="flex items-center gap-[0.5vw] text-[0.55vw] uppercase tracking-[0.1em] text-[var(--lcd-text)] font-mono min-w-0 flex-1">
+                      <span className="truncate flex-1">{track.label}</span>
+                      <span className="text-[var(--lcd-text-dim)] flex-shrink-0">
+                        {formatPercent(percent)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-[0.5vw] text-[0.55vw] uppercase tracking-[0.1em] text-[var(--lcd-text)] font-mono min-w-0 flex-1">
-                    <span className="truncate flex-1">{track.label}</span>
-                    <span className="text-[var(--lcd-text-dim)] flex-shrink-0">{formatPercent(percent)}</span>
-                  </div>
+                  <MiniWaveform sampleSrc={track.sampleSrc} progress={percent} chop={track.chop} />
                 </div>
-                <MiniWaveform sampleSrc={track.sampleSrc} progress={percent} chop={track.chop} />
-              </div>
-            )
-          })
-        )}
+              )
+            })
+          )}
         </div>
       </div>
     </div>
