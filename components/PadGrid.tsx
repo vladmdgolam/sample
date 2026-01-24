@@ -424,7 +424,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
         {!editMode && (
           <>
             <div className="hidden md:block" /> {/* Spacer for first column */}
-            <div className="hidden md:flex flex-col gap-[0.3vw] pt-[2vw] md:pt-[0.5vw]">
+            <div className="flex flex-col gap-[1vw] md:gap-[0.3vw] pt-[3vw] md:pt-[0.5vw]">
               <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
                 Samples by{" "}
                 <a
@@ -445,7 +445,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                   Vlad
                 </a>
               </div>
-              <div className="flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
+              <div className="hidden md:flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
                 <span className="flex items-center gap-[0.25vw]">
                   <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
                   <span>to see hotkeys</span>
