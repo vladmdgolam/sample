@@ -116,8 +116,8 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
     <div className="relative w-full h-[1.5vw]">
       <canvas
         ref={canvasRef}
-        width={400}
-        height={60}
+        width={800}
+        height={120}
         className="w-full h-full rounded-[0.2vw]"
       />
       {/* Playhead indicator */}
@@ -681,7 +681,9 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
           <div className="rounded-[0.3vw] bg-[var(--lcd-text)]/20 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-mono font-semibold tracking-[0.2em]">
             {padKey.toUpperCase()}
           </div>
-          <span className="text-[0.7vw] uppercase tracking-[0.15em] text-[var(--lcd-text-dim)] font-mono">Edit Mode</span>
+          <span className="text-[0.65vw] text-[var(--lcd-text)] font-mono truncate max-w-[15vw]">
+            {decodeURIComponent(sampleSrc.split("/").pop() ?? "").replace(/\.[^/.]+$/, "")}
+          </span>
           {audioBuffer && (
             <span className="text-[0.65vw] text-[var(--lcd-text-dim)] font-mono">{audioBuffer.duration.toFixed(2)}s</span>
           )}
@@ -747,8 +749,8 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
         >
           <canvas
             ref={canvasRef}
-            width={800}
-            height={200}
+            width={1600}
+            height={400}
             className="w-full h-[10vw] rounded-[0.4vw] cursor-crosshair"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -775,10 +777,12 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
             {selection ? (
               <>Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s ({(selection.end - selection.start).toFixed(3)}s)</>
             ) : (
-              <span className="opacity-40">Drag to select region • Pinch to zoom</span>
+              <span className="opacity-40">
+                Drag to select • Pinch to zoom{zoom > 1 && " • Scroll to pan"}
+              </span>
             )}
             {zoom > 1 && (
-              <span className="opacity-60">Zoom: {zoom.toFixed(1)}x</span>
+              <span className="opacity-60">{zoom.toFixed(1)}x</span>
             )}
           </div>
         </div>
