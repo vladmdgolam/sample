@@ -383,30 +383,29 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
           <span className="text-[0.7vw] uppercase tracking-[0.15em] text-[var(--lcd-text-dim)] font-mono">Edit Mode</span>
         </div>
         <div className="flex gap-[0.6vw]">
+          {isPlaying ? (
+            <button
+              onClick={handleStopPlayback}
+              className="rounded-[var(--r-btn)] bg-[var(--c-btn-red)] hover:brightness-110 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-all text-white"
+            >
+              STOP <span className="opacity-70">(SPC)</span>
+            </button>
+          ) : (
+            <button
+              onClick={handlePlaySelection}
+              disabled={!selection}
+              className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              PLAY <span className="opacity-60">(SPC)</span>
+            </button>
+          )}
           {selection && (
-            <>
-              {isPlaying ? (
-                <button
-                  onClick={handleStopPlayback}
-                  className="rounded-[var(--r-btn)] bg-[var(--c-btn-red)] hover:brightness-110 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-all text-white"
-                >
-                  STOP <span className="opacity-70">(SPC)</span>
-                </button>
-              ) : (
-                <button
-                  onClick={handlePlaySelection}
-                  className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/80 hover:bg-[var(--lcd-text)] px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--c-lcd-bg)]"
-                >
-                  PLAY <span className="opacity-70">(SPC)</span>
-                </button>
-              )}
-              <button
-                onClick={handleApplyChop}
-                className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/20 hover:bg-[var(--lcd-text)]/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
-              >
-                APPLY
-              </button>
-            </>
+            <button
+              onClick={handleApplyChop}
+              className="rounded-[var(--r-btn)] bg-[var(--lcd-text)]/20 hover:bg-[var(--lcd-text)]/30 px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors"
+            >
+              APPLY
+            </button>
           )}
           <button
             onClick={onExit}
