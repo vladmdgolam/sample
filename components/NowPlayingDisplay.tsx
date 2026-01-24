@@ -323,27 +323,50 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const startSample = Math.floor((visibleStart / audioBuffer.duration) * data.length)
     const endSample = Math.ceil((visibleEnd / audioBuffer.duration) * data.length)
     const visibleSamples = endSample - startSample
-    const step = Math.ceil(visibleSamples / width)
 
     // Dark green LCD background (retro edit mode)
     ctx.fillStyle = "#002F24"
     ctx.fillRect(0, 0, width, height)
 
-    // Draw waveform in dim LCD green
+    // Draw waveform as filled path for smooth appearance at all zoom levels
     ctx.fillStyle = "#3D8C6A"
+    ctx.beginPath()
+
+    // Build arrays of min/max values
+    const mins: number[] = []
+    const maxs: number[] = []
+
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
       const sampleStart = startSample + Math.floor((i / width) * visibleSamples)
-      for (let j = 0; j < step; j++) {
+      const sampleEnd = startSample + Math.floor(((i + 1) / width) * visibleSamples)
+      const actualStep = Math.max(1, sampleEnd - sampleStart)
+
+      for (let j = 0; j < actualStep; j++) {
         const datum = data[sampleStart + j]
         if (datum !== undefined) {
           if (datum < min) min = datum
           if (datum > max) max = datum
         }
       }
-      ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
+      mins.push(min)
+      maxs.push(max)
     }
+
+    // Draw top edge (max values)
+    ctx.moveTo(0, (1 + maxs[0]) * amp)
+    for (let i = 1; i < width; i++) {
+      ctx.lineTo(i, (1 + maxs[i]) * amp)
+    }
+
+    // Draw bottom edge (min values) in reverse
+    for (let i = width - 1; i >= 0; i--) {
+      ctx.lineTo(i, (1 + mins[i]) * amp)
+    }
+
+    ctx.closePath()
+    ctx.fill()
 
     // Draw selection with LCD green highlight
     if (selection) {
