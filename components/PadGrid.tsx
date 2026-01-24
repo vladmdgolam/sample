@@ -44,7 +44,7 @@ const formatLabel = (path: string) => {
 export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDark = false }) => {
   const [showTips, setShowTips] = useState(false)
   const [playingTracks, setPlayingTracks] = useState<PlayingTrack[]>([])
-  const [editMode, setEditMode] = useState<{ padKey: string; sampleSrc: string } | null>(null)
+  const [editMode, setEditMode] = useState<{ padKey: string; sampleSrc: string; existingChop?: { start: number; end: number } } | null>(null)
   const [sampleChops, setSampleChops] = useState<Record<string, { start: number; end: number }>>({})
   const [customSamples, setCustomSamples] = useState<Record<string, { url: string; name: string }>>(
     {},
