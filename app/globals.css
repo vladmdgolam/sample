@@ -34,6 +34,10 @@
   --shadow-btn: 1px 1px 3px rgba(74,66,57,0.12), -1px -1px 2px rgba(255,255,255,0.7);
   --shadow-pad-inset: inset 0px 2px 4px rgba(74,66,57,0.18), inset 0px -1px 2px rgba(255,255,255,0.4);
 
+  /* Perfect shadow colors (warm tint) */
+  --shadow-color-8: rgba(74, 66, 57, 0.03);
+  --shadow-color-10: rgba(74, 66, 57, 0.06);
+
   /* Legacy mappings */
   --page-bg: #F5F1EB;
   --container-bg: var(--c-chassis-main);
@@ -64,6 +68,41 @@
   --lcd-text-dim: var(--c-lcd-text-dim);
   --shadow-size: 0px;
   --out-size: 6px;
+
+  /* Perfect shadow colors (dark mode) */
+  --shadow-color-8: rgba(0, 0, 0, 0.15);
+  --shadow-color-10: rgba(0, 0, 0, 0.25);
+}
+
+/* Perfect layered shadows - inspired by michael.fm */
+.shadow-perfect {
+  box-shadow:
+    0 0 0 1px var(--shadow-color-8),
+    0 1px 1px -0.5px var(--shadow-color-8),
+    0 3px 3px -1.5px var(--shadow-color-8),
+    0 6px 6px -3px var(--shadow-color-8),
+    0 12px 12px -6px var(--shadow-color-8),
+    0 24px 24px -12px var(--shadow-color-10);
+}
+
+.shadow-perfect-sm {
+  box-shadow:
+    0 0 0 1px var(--shadow-color-8),
+    0 1px 1px -0.5px var(--shadow-color-8),
+    0 1px 1px -1px var(--shadow-color-8),
+    0 2px 2px -1px var(--shadow-color-8),
+    0 4px 4px -2px var(--shadow-color-8),
+    0 8px 8px -4px var(--shadow-color-10);
+}
+
+.shadow-device {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.16),
+    0 3px 3px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.12),
+    0 8px 16px rgba(0, 0, 0, 0.1),
+    0 16px 32px rgba(0, 0, 0, 0.08),
+    0 32px 64px rgba(0, 0, 0, 0.15);
 }
 
 

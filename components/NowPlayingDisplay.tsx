@@ -675,7 +675,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
   }, [])
 
   return (
-    <div className="edit-mode rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1.1vw] text-[var(--lcd-text)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]">
+    <div className="edit-mode rounded-[0.4vw] border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1.1vw] text-[var(--lcd-text)] shadow-perfect-sm">
       <div className="flex items-center justify-between mb-[0.9vw]">
         <div className="flex items-center gap-[0.6vw]">
           <div className="rounded-[0.3vw] bg-[var(--lcd-text)]/20 px-[0.6vw] py-[0.25vw] text-[0.7vw] font-mono font-semibold tracking-[0.2em]">
@@ -797,7 +797,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
   }
   return (
     <div className="hidden md:block relative">
-      <div className="edit-mode absolute inset-0 rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1vw] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
+      <div className="edit-mode absolute inset-0 rounded-[0.4vw] border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1vw] shadow-perfect-sm flex flex-col overflow-hidden">
         <div className="flex items-center justify-between text-[0.6vw] uppercase tracking-[0.2em] text-[var(--lcd-text)] font-mono flex-shrink-0">
           <span>NOW PLAYING</span>
           <span>{tracks.length.toString().padStart(2, "0")}</span>

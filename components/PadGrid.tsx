@@ -365,7 +365,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-[4vw] md:p-[2.5%] pb-[3vw] md:pb-[1.5%] bg-[var(--container-bg)] max-w-full relative rounded-[2vw] md:rounded-[0.5vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-[1.5vw] mx-[3vw] md:mx-0">
+      <div className="p-[4vw] md:p-[2.5%] pb-[3vw] md:pb-[1.5%] bg-[var(--container-bg)] max-w-full relative rounded-[2vw] md:rounded-[0.5vw] grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-[1.5vw] mx-[3vw] md:mx-0 shadow-device">
         <NowPlayingDisplay
           tracks={playingTracks}
           editMode={editMode}
