@@ -448,10 +448,9 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
               <div className="hidden md:flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
                 <span className="flex items-center gap-[0.25vw]">
                   <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
-                  <span className="text-nowrap">to see hotkeys</span>
+                  <span className="text-nowrap">for hotkeys</span>
                 </span>
                 <span className="flex items-center gap-[0.25vw]">
-                  <span>press</span>
                   <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
                   <span className="text-nowrap">on a pad to chop</span>
                 </span>
@@ -459,17 +458,17 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                 <span className="flex items-center gap-[0.25vw]">
                   <span className="text-balance">drop a file on a pad to upload a sample</span>
                 </span>
-                {/* {Object.keys(sampleChops).length > 0 && (
+                {Object.keys(sampleChops).length > 0 && (
                   <>
                     •
                     <button
                       onClick={handleExportConfig}
-                      className="flex items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
+                      className="flex underline items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
                     >
                       <span>export</span>
                     </button>
                   </>
-                )} */}
+                )}
               </div>
             </div>
           </>
