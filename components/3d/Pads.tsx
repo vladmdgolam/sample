@@ -21,7 +21,7 @@ export function Pads({ nodes, boxPositions }: PadsProps) {
       geometry={nodes.Box261.geometry}
       // raycast={raycaster.intersectObject}
     >
-      <meshPhysicalMaterial color="white" />
+      <meshPhysicalMaterial color="#C4B8A8" />
       {boxPositions.map((position, index) => (
         <Pad key={index} position={position} />
       ))}

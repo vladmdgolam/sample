@@ -287,7 +287,7 @@ const PadComponent: React.FC<PadProps> = ({
           {
             "pad-hovered": isHovered,
             "pad-playing": isPlaying,
-            "ring-2 ring-amber-400 ring-inset": isDragOver,
+            "ring-2 ring-[#D4A574] ring-inset": isDragOver,
           }
         )}
         animate={{
@@ -302,7 +302,7 @@ const PadComponent: React.FC<PadProps> = ({
           </div>
         )}
         {chop && (
-          <div className="absolute top-[0.3vw] right-[0.3vw] bg-amber-500/90 text-black px-[0.4vw] py-[0.1vw] rounded-[0.15vw] text-[0.4vw] font-bold uppercase tracking-wider">
+          <div className="absolute top-[0.3vw] right-[0.3vw] bg-[#C9847A]/90 text-white px-[0.4vw] py-[0.1vw] rounded-[0.15vw] text-[0.4vw] font-bold uppercase tracking-wider">
             CHOPPED
           </div>
         )}
@@ -312,8 +312,8 @@ const PadComponent: React.FC<PadProps> = ({
           </div>
         )}
         {isDragOver && (
-          <div className="absolute inset-0 bg-amber-500/30 flex items-center justify-center rounded-[0.5vw]">
-            <span className="text-[0.7vw] font-bold text-amber-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">DROP</span>
+          <div className="absolute inset-0 bg-[#D4A574]/30 flex items-center justify-center rounded-[0.5vw]">
+            <span className="text-[0.7vw] font-bold text-[#E8C4A0] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">DROP</span>
           </div>
         )}
         <motion.div

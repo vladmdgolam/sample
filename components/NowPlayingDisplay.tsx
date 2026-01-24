@@ -72,16 +72,16 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
 
     ctx.clearRect(0, 0, width, height)
 
-    // Draw green background only for chopped region
+    // Draw warm background only for chopped region
     if (chop) {
       const startX = (chop.start / audioBuffer.duration) * width
       const endX = (chop.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(127, 255, 178, 0.2)"
+      ctx.fillStyle = "rgba(74, 66, 57, 0.15)"
       ctx.fillRect(startX, 0, endX - startX, height)
     }
 
-    // Draw waveform in LCD green (--c-lcd-text: #7FFFB2)
-    ctx.fillStyle = chop ? "rgba(127, 255, 178, 0.4)" : "rgba(127, 255, 178, 0.25)"
+    // Draw waveform in warm LCD color
+    ctx.fillStyle = chop ? "rgba(74, 66, 57, 0.5)" : "rgba(74, 66, 57, 0.35)"
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
@@ -93,9 +93,9 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
-    // Draw progress overlay in bright LCD green (--c-lcd-text: #7FFFB2)
+    // Draw progress overlay in warm LCD color
     const progressX = progress * width
-    ctx.fillStyle = "rgba(127, 255, 178, 0.9)"
+    ctx.fillStyle = "rgba(74, 66, 57, 0.9)"
     for (let i = 0; i < progressX; i++) {
       let min = 1.0
       let max = -1.0
@@ -188,12 +188,12 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     const step = Math.ceil(data.length / width)
     const amp = height / 2
 
-    // Dark LCD background
-    ctx.fillStyle = "#002F24"
+    // Warm LCD background
+    ctx.fillStyle = "#C9BDA8"
     ctx.fillRect(0, 0, width, height)
 
-    // Draw waveform in dim LCD green (--c-lcd-text-dim: #3D8C6A)
-    ctx.fillStyle = "#3D8C6A"
+    // Draw waveform in warm LCD color
+    ctx.fillStyle = "#8B8073"
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
@@ -205,15 +205,15 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
-    // Draw selection with LCD green highlight (#7FFFB2)
+    // Draw selection with warm highlight
     if (selection) {
       const startX = (selection.start / audioBuffer.duration) * width
       const endX = (selection.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(127, 255, 178, 0.3)"
+      ctx.fillStyle = "rgba(212, 165, 116, 0.35)"
       ctx.fillRect(startX, 0, endX - startX, height)
 
       // Draw selection borders
-      ctx.strokeStyle = "rgba(127, 255, 178, 0.8)"
+      ctx.strokeStyle = "rgba(212, 165, 116, 0.9)"
       ctx.lineWidth = 2
       ctx.beginPath()
       ctx.moveTo(startX, 0)

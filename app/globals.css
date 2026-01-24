@@ -3,58 +3,67 @@
 @tailwind utilities;
 
 :root {
-  /* Pastel Colors */
-  --c-chassis-main: #E8E4E1;
-  --c-chassis-dark: #D4CFC9;
-  --c-armrest: #3D3D3D;
+  /* Muji-inspired Natural Palette */
+  --c-chassis-main: #E8E3DB;
+  --c-chassis-dark: #D9D3C8;
+  --c-armrest: #5C5249;
 
-  --c-pad-rubber: #B8C4D0;
-  --c-btn-light: #F5F0ED;
-  --c-btn-slate: #8BA4B4;
-  --c-btn-red: #E8857A;
+  --c-pad-rubber: #C4B8A8;
+  --c-btn-light: #F2EDE6;
+  --c-btn-slate: #9A8F82;
+  --c-btn-red: #C9847A;
 
-  --c-lcd-bg: #A8D5C2;
-  --c-lcd-bezel: #6B8F80;
-  --c-lcd-text: #2D5A47;
-  --c-lcd-text-dim: #5A8B74;
+  --c-lcd-bg: #D4C9B8;
+  --c-lcd-bezel: #8B8073;
+  --c-lcd-text: #4A4239;
+  --c-lcd-text-dim: #7A7068;
 
-  --c-text-dark: #4A4A4A;
-  --c-accent-red: #E88B82;
+  --c-text-dark: #4A4239;
+  --c-accent-warm: #C9847A;
+
+  /* Playing state colors */
+  --c-playing: #D4A574;
+  --c-playing-bright: #E8C4A0;
+  --c-playing-glow: rgba(212, 165, 116, 0.6);
 
   /* Radii */
   --r-pad: 6px;
   --r-btn: 4px;
 
   /* Shadows */
-  --shadow-btn: 1px 1px 3px rgba(0,0,0,0.15), -1px -1px 2px rgba(255,255,255,0.6);
-  --shadow-pad-inset: inset 0px 2px 4px rgba(0,0,0,0.2), inset 0px -1px 2px rgba(255,255,255,0.3);
+  --shadow-btn: 1px 1px 3px rgba(74,66,57,0.12), -1px -1px 2px rgba(255,255,255,0.7);
+  --shadow-pad-inset: inset 0px 2px 4px rgba(74,66,57,0.18), inset 0px -1px 2px rgba(255,255,255,0.4);
 
   /* Legacy mappings */
-  --page-bg: #F5F2EF;
+  --page-bg: #F5F1EB;
   --container-bg: var(--c-chassis-main);
   --bg: var(--c-pad-rubber);
   --lcd-bg: var(--c-lcd-bg);
   --lcd-text: var(--c-lcd-text);
   --lcd-text-dim: var(--c-lcd-text-dim);
-  --out-size: 6px;
+  --out-size: 8px;
 }
 
 .dark {
-  --c-chassis-main: #2A2A2A;
-  --c-chassis-dark: #1A1A1A;
-  --c-pad-rubber: #4A4A4A;
-  --c-lcd-bg: #003D2E;
-  --c-lcd-text: #5FDF92;
-  --c-lcd-text-dim: #2D6C4A;
+  --c-chassis-main: #2D2A26;
+  --c-chassis-dark: #1F1D1A;
+  --c-pad-rubber: #4A453D;
+  --c-lcd-bg: #3D3830;
+  --c-lcd-text: #D4C9B8;
+  --c-lcd-text-dim: #8B8073;
 
-  --page-bg: #1A1A1A;
+  --c-playing: #C9947A;
+  --c-playing-bright: #DEB896;
+  --c-playing-glow: rgba(201, 148, 122, 0.5);
+
+  --page-bg: #1F1D1A;
   --container-bg: var(--c-chassis-main);
   --bg: var(--c-pad-rubber);
   --lcd-bg: var(--c-lcd-bg);
   --lcd-text: var(--c-lcd-text);
   --lcd-text-dim: var(--c-lcd-text-dim);
   --shadow-size: 0px;
-  --out-size: 4px;
+  --out-size: 6px;
 }
 
 
@@ -109,16 +118,11 @@ body {
 }
 
 .pad-playing {
-  --glow: #f59e0b;
-  --glow-vibrant: #fbbf24;
-  background: linear-gradient(135deg, var(--glow) 0%, var(--glow-vibrant) 100%);
-  animation: mpcGlow 0.4s ease-in-out infinite alternate;
-  border-color: #b45309;
-}
-
-.dark .pad-playing {
-  --glow: #d97706;
-  --glow-vibrant: #f59e0b;
+  background: linear-gradient(135deg, var(--c-playing) 0%, var(--c-playing-bright) 100%);
+  animation: mpcGlow 0.35s ease-in-out infinite alternate;
+  border-color: #A67C5B;
+  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 
 .pad-circle {
@@ -169,13 +173,15 @@ body {
 @keyframes mpcGlow {
   0% {
     box-shadow:
-      inset 0 0 20px rgba(251, 191, 36, 0.3),
-      0 0 var(--out-size) rgba(245, 158, 11, 0.5);
+      inset 0 0 15px var(--c-playing-glow),
+      0 0 var(--out-size) var(--c-playing-glow),
+      0 0 calc(var(--out-size) * 2) var(--c-playing-glow);
   }
   100% {
     box-shadow:
-      inset 0 0 30px rgba(251, 191, 36, 0.5),
-      0 0 calc(var(--out-size) * 1.5) rgba(245, 158, 11, 0.7);
+      inset 0 0 25px var(--c-playing-glow),
+      0 0 calc(var(--out-size) * 1.5) var(--c-playing-glow),
+      0 0 calc(var(--out-size) * 3) var(--c-playing-glow);
   }
 }
 
