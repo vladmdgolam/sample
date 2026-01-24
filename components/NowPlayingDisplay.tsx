@@ -747,7 +747,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
             {selection ? (
               <>Selection: {selection.start.toFixed(3)}s - {selection.end.toFixed(3)}s ({(selection.end - selection.start).toFixed(3)}s)</>
             ) : (
-              <span className="opacity-40">Drag to select region</span>
+              <span className="opacity-40">Drag to select region • Pinch to zoom</span>
             )}
             {zoom > 1 && (
               <span className="opacity-60">Zoom: {zoom.toFixed(1)}x</span>
