@@ -14,40 +14,85 @@ function generateSpacing() {
 }
 
 const config: Config = {
-  darkMode: "class",
+  darkMode: ["class", "class"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
-      colors: {
-        zinc: {
-          100: "rgb(244 244 245 / var(--tw-bg-opacity))",
-          150: "rgb(242 242 243 / var(--tw-bg-opacity))",
-          200: "rgb(228 228 231 / var(--tw-bg-opacity))",
-          300: "rgb(212 212 216 / var(--tw-bg-opacity))",
-          400: "rgb(161 161 170 / var(--tw-bg-opacity))",
-          700: "rgb(63 63 70 / var(--tw-bg-opacity))",
-          800: "rgb(39 39 42 / var(--tw-bg-opacity))",
-          900: "rgb(24 24 27 / var(--tw-bg-opacity))",
-          "100/10": "hsla(240, 5%, 96%, .1)",
-          "200/10": "hsla(240, 6%, 90%, .1)",
-          "200/20": "hsla(240, 6%, 90%, .2)",
-          "200/30": "hsla(240, 6%, 90%, .3)",
-          "200/50": "hsla(240, 6%, 90%, .5)",
-          "200/80": "hsla(240, 6%, 90%, .8)",
-        },
-      },
-      spacing: generateSpacing(),
-    },
+  	extend: {
+  		backgroundImage: {
+  			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+  			'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))'
+  		},
+  		colors: {
+  			zinc: {
+  				'100': 'rgb(244 244 245 / var(--tw-bg-opacity))',
+  				'150': 'rgb(242 242 243 / var(--tw-bg-opacity))',
+  				'200': 'rgb(228 228 231 / var(--tw-bg-opacity))',
+  				'300': 'rgb(212 212 216 / var(--tw-bg-opacity))',
+  				'400': 'rgb(161 161 170 / var(--tw-bg-opacity))',
+  				'700': 'rgb(63 63 70 / var(--tw-bg-opacity))',
+  				'800': 'rgb(39 39 42 / var(--tw-bg-opacity))',
+  				'900': 'rgb(24 24 27 / var(--tw-bg-opacity))',
+  				'100/10': 'hsla(240, 5%, 96%, .1)',
+  				'200/10': 'hsla(240, 6%, 90%, .1)',
+  				'200/20': 'hsla(240, 6%, 90%, .2)',
+  				'200/30': 'hsla(240, 6%, 90%, .3)',
+  				'200/50': 'hsla(240, 6%, 90%, .5)',
+  				'200/80': 'hsla(240, 6%, 90%, .8)'
+  			},
+  			background: 'hsl(var(--background))',
+  			foreground: 'hsl(var(--foreground))',
+  			card: {
+  				DEFAULT: 'hsl(var(--card))',
+  				foreground: 'hsl(var(--card-foreground))'
+  			},
+  			popover: {
+  				DEFAULT: 'hsl(var(--popover))',
+  				foreground: 'hsl(var(--popover-foreground))'
+  			},
+  			primary: {
+  				DEFAULT: 'hsl(var(--primary))',
+  				foreground: 'hsl(var(--primary-foreground))'
+  			},
+  			secondary: {
+  				DEFAULT: 'hsl(var(--secondary))',
+  				foreground: 'hsl(var(--secondary-foreground))'
+  			},
+  			muted: {
+  				DEFAULT: 'hsl(var(--muted))',
+  				foreground: 'hsl(var(--muted-foreground))'
+  			},
+  			accent: {
+  				DEFAULT: 'hsl(var(--accent))',
+  				foreground: 'hsl(var(--accent-foreground))'
+  			},
+  			destructive: {
+  				DEFAULT: 'hsl(var(--destructive))',
+  				foreground: 'hsl(var(--destructive-foreground))'
+  			},
+  			border: 'hsl(var(--border))',
+  			input: 'hsl(var(--input))',
+  			ring: 'hsl(var(--ring))',
+  			chart: {
+  				'1': 'hsl(var(--chart-1))',
+  				'2': 'hsl(var(--chart-2))',
+  				'3': 'hsl(var(--chart-3))',
+  				'4': 'hsl(var(--chart-4))',
+  				'5': 'hsl(var(--chart-5))'
+  			}
+  		},
+  		spacing: generateSpacing(),
+  		borderRadius: {
+  			lg: 'var(--radius)',
+  			md: 'calc(var(--radius) - 2px)',
+  			sm: 'calc(var(--radius) - 4px)'
+  		}
+  	}
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 }
 
 export default config

@@ -4,9 +4,15 @@
 import { padSamples } from "@/app/constants"
 import { NowPlayingDisplay } from "@/components/NowPlayingDisplay"
 import { Pad } from "@/components/Pad"
+import { Kbd } from "@/components/ui/kbd"
 import classNames from "classnames"
 import { useCallback, useEffect, useRef, useState } from "react"
 import React from "react"
+
+interface SamplerConfig {
+  version: number
+  chops: Record<string, { start: number; end: number }>
+}
 
 interface PadGridProps {
   padKeys: string[]
@@ -201,6 +207,37 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
     setEditMode(null)
   }, [])
 
+  // Export current config
+  const handleExportConfig = useCallback(() => {
+    const config: SamplerConfig = {
+      version: 1,
+      chops: sampleChops,
+    }
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `sampler-config-${new Date().toISOString().split("T")[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [sampleChops])
+
+  // Import config from JSON file
+  const handleImportConfig = useCallback((file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const config = JSON.parse(e.target?.result as string) as SamplerConfig
+        if (config.version === 1 && config.chops) {
+          setSampleChops(config.chops)
+        }
+      } catch (err) {
+        console.error("Failed to parse config file:", err)
+      }
+    }
+    reader.readAsText(file)
+  }, [])
+
   // Prevent browser from opening files when dragging over the grid
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -210,7 +247,14 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-  }, [])
+
+    // Check if it's a JSON config file
+    const files = Array.from(e.dataTransfer.files)
+    const jsonFile = files.find(f => f.name.endsWith(".json"))
+    if (jsonFile) {
+      handleImportConfig(jsonFile)
+    }
+  }, [handleImportConfig])
 
   const handleApplyEdit = useCallback(
     (padKey: string, selection: { start: number; end: number }) => {
@@ -296,32 +340,41 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
             })}
           </div>
         </div>}
-        {/* Credits */}
+        {/* Footer */}
         <div className="hidden md:block" /> {/* Spacer for first column */}
-        <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70 pt-[2vw] md:pt-[0.5vw]">
-          Samples by{" "}<a
-            href="https://drumboii.com/products/free-808-sample-pack"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:opacity-80 transition-opacity"
-          >Drumboii</a> • Made by <a
-            href="https://vladik.xyz/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:opacity-80 transition-opacity"
-          >Vlad</a>
-        </div>
-        {/* Instructions */}
-        <div className="hidden md:block" /> {/* Spacer for first column */}
-        <div className="hidden md:flex items-center gap-[1vw] text-[0.65vw] text-[var(--c-text-dark)] opacity-50 pt-[0.3vw]">
-          <span className="flex items-center gap-[0.3vw]">
-            <kbd className="px-[0.4vw] py-[0.15vw] rounded-[0.2vw] bg-[var(--c-chassis-dark)] border border-[rgba(0,0,0,0.1)] font-mono text-[0.55vw] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd>
-            <span>show tips</span>
-          </span>
-          <span className="flex items-center gap-[0.3vw]">
-            <kbd className="px-[0.4vw] py-[0.15vw] rounded-[0.2vw] bg-[var(--c-chassis-dark)] border border-[rgba(0,0,0,0.1)] font-mono text-[0.55vw] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Right Click</kbd>
-            <span>edit mode</span>
-          </span>
+        <div className="hidden md:flex flex-col gap-[0.3vw] pt-[2vw] md:pt-[0.5vw]">
+          <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
+            Samples by{" "}<a
+              href="https://drumboii.com/products/free-808-sample-pack"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:opacity-80 transition-opacity"
+            >Drumboii</a> • Made by <a
+              href="https://vladik.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:opacity-80 transition-opacity"
+            >Vlad</a>
+          </div>
+          <div className="flex items-center gap-[0.8vw] text-[0.6vw] text-[var(--c-text-dark)] opacity-50">
+            <span className="flex items-center gap-[0.25vw]">
+              <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">Space</Kbd>
+              <span>tips</span>
+            </span>
+            <span className="flex items-center gap-[0.25vw]">
+              <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">RMB</Kbd>
+              <span>edit</span>
+            </span>
+            {Object.keys(sampleChops).length > 0 && (
+              <button
+                onClick={handleExportConfig}
+                className="flex items-center gap-[0.25vw] hover:opacity-80 transition-opacity"
+              >
+                <Kbd className="h-auto px-[0.35vw] py-[0.1vw] text-[0.5vw]">↓</Kbd>
+                <span>export</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

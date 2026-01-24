@@ -201,3 +201,38 @@ body {
   /* Ensure consistent gap in both directions */
 }
 
+
+
+/* Shadcn UI variables - Muji-themed */
+@layer base {
+  :root {
+    --background: 36 23% 95%;
+    --foreground: 30 10% 25%;
+    --card: 36 18% 90%;
+    --card-foreground: 30 10% 25%;
+    --popover: 36 23% 95%;
+    --popover-foreground: 30 10% 25%;
+    --primary: 30 10% 25%;
+    --primary-foreground: 36 23% 95%;
+    --secondary: 36 12% 85%;
+    --secondary-foreground: 30 10% 25%;
+    --muted: 36 12% 85%;
+    --muted-foreground: 30 8% 45%;
+    --accent: 28 45% 65%;
+    --accent-foreground: 30 10% 25%;
+    --destructive: 6 55% 55%;
+    --destructive-foreground: 36 23% 95%;
+    --border: 30 10% 75%;
+    --input: 30 10% 75%;
+    --ring: 28 45% 65%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 30 12% 12%;
+    --foreground: 36 18% 85%;
+    --muted: 30 8% 25%;
+    --muted-foreground: 30 8% 55%;
+    --border: 30 8% 25%;
+  }
+}
+
