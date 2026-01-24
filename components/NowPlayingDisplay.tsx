@@ -630,6 +630,25 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
     lastTouchCenterRef.current = null
   }, [])
 
+  // Native wheel event listener with passive: false to block browser zoom
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || !audioBuffer) return
+
+    const handleNativeWheel = (e: WheelEvent) => {
+      // Block browser zoom on pinch gesture
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+      } else if (zoom > 1) {
+        // Block scroll when panning
+        e.preventDefault()
+      }
+    }
+
+    container.addEventListener('wheel', handleNativeWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleNativeWheel)
+  }, [audioBuffer, zoom])
+
   useEffect(() => {
     return () => {
       if (animationFrameRef.current) {
