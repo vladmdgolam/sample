@@ -682,6 +682,9 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
             {padKey.toUpperCase()}
           </div>
           <span className="text-[0.7vw] uppercase tracking-[0.15em] text-[var(--lcd-text-dim)] font-mono">Edit Mode</span>
+          {audioBuffer && (
+            <span className="text-[0.65vw] text-[var(--lcd-text-dim)] font-mono">{audioBuffer.duration.toFixed(2)}s</span>
+          )}
         </div>
         <div className="flex gap-[0.6vw]">
           {isPlaying ? (
