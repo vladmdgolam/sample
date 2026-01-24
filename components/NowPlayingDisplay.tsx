@@ -72,16 +72,16 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
 
     ctx.clearRect(0, 0, width, height)
 
-    // Draw warm background only for chopped region
+    // Draw green background only for chopped region
     if (chop) {
       const startX = (chop.start / audioBuffer.duration) * width
       const endX = (chop.end / audioBuffer.duration) * width
-      ctx.fillStyle = "rgba(74, 66, 57, 0.15)"
+      ctx.fillStyle = "rgba(127, 255, 178, 0.15)"
       ctx.fillRect(startX, 0, endX - startX, height)
     }
 
-    // Draw waveform in warm LCD color
-    ctx.fillStyle = chop ? "rgba(74, 66, 57, 0.5)" : "rgba(74, 66, 57, 0.35)"
+    // Draw waveform in LCD green
+    ctx.fillStyle = chop ? "rgba(127, 255, 178, 0.4)" : "rgba(127, 255, 178, 0.25)"
     for (let i = 0; i < width; i++) {
       let min = 1.0
       let max = -1.0
@@ -93,9 +93,9 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp))
     }
 
-    // Draw progress overlay in warm LCD color
+    // Draw progress overlay in bright LCD green
     const progressX = progress * width
-    ctx.fillStyle = "rgba(74, 66, 57, 0.9)"
+    ctx.fillStyle = "rgba(127, 255, 178, 0.9)"
     for (let i = 0; i < progressX; i++) {
       let min = 1.0
       let max = -1.0
@@ -174,6 +174,17 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       audioContextRef.current?.close()
     }
   }, [sampleSrc])
+
+  // ESC key to exit edit mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onExit()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [onExit])
 
   useEffect(() => {
     if (!audioBuffer || !canvasRef.current) return
@@ -417,7 +428,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
   }
   return (
     <div className="hidden md:block relative">
-      <div className="absolute inset-0 rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1vw] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
+      <div className="edit-mode absolute inset-0 rounded-none border-4 border-[var(--c-lcd-bezel)] bg-[var(--c-lcd-bg)] p-[1vw] shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between text-[0.6vw] uppercase tracking-[0.2em] text-[var(--lcd-text)] font-mono flex-shrink-0">
           <span>NOW PLAYING</span>
           <span>{tracks.length.toString().padStart(2, "0")}</span>
