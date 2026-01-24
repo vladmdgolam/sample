@@ -199,8 +199,8 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
   )
 
   const handleEnterEditMode = useCallback((padKey: string, sampleSrc: string) => {
-    setEditMode({ padKey, sampleSrc })
-  }, [])
+    setEditMode({ padKey, sampleSrc, existingChop: sampleChops[padKey] })
+  }, [sampleChops])
 
   const handleFileDrop = useCallback(
     (startPadKey: string, files: File[]) => {

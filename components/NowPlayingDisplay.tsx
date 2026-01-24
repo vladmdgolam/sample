@@ -17,6 +17,7 @@ interface NowPlayingTrack {
 interface EditMode {
   padKey: string
   sampleSrc: string
+  existingChop?: { start: number; end: number }
 }
 
 interface NowPlayingDisplayProps {
@@ -133,9 +134,16 @@ const MiniWaveform: FC<{ sampleSrc: string; progress: number; chop?: { start: nu
   )
 }
 
-const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void; onApply: (padKey: string, selection: { start: number; end: number }) => void }> = ({
+const WaveformEditor: FC<{
+  sampleSrc: string
+  padKey: string
+  initialChop?: { start: number; end: number }
+  onExit: () => void
+  onApply: (padKey: string, selection: { start: number; end: number }) => void
+}> = ({
   sampleSrc,
   padKey,
+  initialChop,
   onExit,
   onApply,
 }) => {
@@ -199,6 +207,29 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
       audioContextRef.current?.close()
     }
   }, [sampleSrc])
+
+  // Initialize selection and zoom from existing chop
+  useEffect(() => {
+    if (audioBuffer && initialChop) {
+      setSelection(initialChop)
+
+      // Calculate zoom to show the chop with some padding
+      const chopDuration = initialChop.end - initialChop.start
+      const padding = chopDuration * 0.5 // 50% padding on each side
+      const viewDuration = chopDuration + padding * 2
+
+      // Only zoom if the chop is less than 50% of the total duration
+      if (viewDuration < audioBuffer.duration * 0.5) {
+        const newZoom = Math.min(20, audioBuffer.duration / viewDuration)
+        const viewStart = Math.max(0, initialChop.start - padding)
+        const maxPan = 1 - 1 / newZoom
+        const newPan = Math.min(maxPan, viewStart / audioBuffer.duration)
+
+        setZoom(newZoom)
+        setPanOffset(newPan)
+      }
+    }
+  }, [audioBuffer, initialChop])
 
   // Keyboard shortcuts: ESC to exit, Space to play/pause
   // Store refs to handlers for spacebar
@@ -833,7 +864,7 @@ export const NowPlayingDisplay: FC<NowPlayingDisplayProps> = ({ tracks, editMode
   if (editMode && onExitEditMode && onApplyEdit) {
     return (
       <div className="col-span-2">
-        <WaveformEditor sampleSrc={editMode.sampleSrc} padKey={editMode.padKey} onExit={onExitEditMode} onApply={onApplyEdit} />
+        <WaveformEditor sampleSrc={editMode.sampleSrc} padKey={editMode.padKey} initialChop={editMode.existingChop} onExit={onExitEditMode} onApply={onApplyEdit} />
       </div>
     )
   }
