@@ -453,7 +453,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
               onClick={handleStopPlayback}
               className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80"
             >
-              STOP <span className="opacity-60">(Space)</span>
+              STOP <span className="opacity-60">(SPACE)</span>
             </button>
           ) : (
             <button
@@ -461,7 +461,7 @@ const WaveformEditor: FC<{ sampleSrc: string; padKey: string; onExit: () => void
               disabled={!selection}
               className="px-[0.9vw] py-[0.4vw] text-[0.7vw] font-mono font-semibold tracking-[0.15em] transition-colors text-[var(--lcd-text)] hover:text-[var(--lcd-text)]/80 disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              PLAY <span className="opacity-60">(Space)</span>
+              PLAY <span className="opacity-60">(SPACE)</span>
             </button>
           )}
           {selection && (
