@@ -440,15 +440,6 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                 </span>
               </div>
               <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
-                808 Pack by{" "}
-                <a
-                  href="https://drumboii.com/products/free-808-sample-pack"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:opacity-80 transition-opacity"
-                >
-                  Drumboii
-                </a>{" "}
                 • Made by{" "}
                 <a
                   href="https://vladik.xyz/"
