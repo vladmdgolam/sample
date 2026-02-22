@@ -440,7 +440,7 @@ export const PadGrid: React.FC<PadGridProps> = ({ padKeys, keyToPadMapping, isDa
                 </span>
               </div>
               <div className="text-center md:text-left text-[2.5vw] md:text-[0.75vw] text-[var(--c-text-dark)] opacity-70">
-                • Made by{" "}
+                Made by{" "}
                 <a
                   href="https://vladik.xyz/"
                   target="_blank"
