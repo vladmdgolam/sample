@@ -1,30 +1,36 @@
-import { sampleFiles } from "@/app/constants"
+import { padKeys, padSamples } from "@/app/constants"
 import { Instance } from "@react-three/drei"
-import { useFrame } from "@react-three/fiber"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { ThreeEvent, useFrame } from "@react-three/fiber"
+import { useCallback, useRef, useState } from "react"
 import { InstancedMesh, MathUtils } from "three"
 
-export const Pad = ({ position }: { position: [number, number, number] }) => {
+// pad is ~132 units tall in model space
+const hoverDepth = 12
+const pressDepth = 30
+const pressDuration = 0.12
+
+export const Pad = ({ position, index }: { position: [number, number, number]; index: number }) => {
   const [isHovered, setIsHovered] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
   const instanceRef = useRef<InstancedMesh>(null)
-  const [audio] = useState(() => new Audio())
+  const pressedAt = useRef(-Infinity)
 
-  const randomSample = useMemo(() => {
-    return sampleFiles[Math.floor(Math.random() * sampleFiles.length)]
-  }, [])
+  const sampleSrc = padSamples[padKeys[index]]
 
-  const playRandomSound = useCallback(() => {
-    audio.src = randomSample
-    audio.play()
-    setIsPlaying(true)
-    audio.onended = () => setIsPlaying(false)
-  }, [audio, randomSample])
+  const playSound = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation()
+      pressedAt.current = performance.now()
+      const audio = new Audio(sampleSrc)
+      audio.play().catch((error) => console.error("Playback failed", error))
+    },
+    [sampleSrc]
+  )
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (instanceRef.current) {
-      const targetY = isHovered ? position[1] * -5 : position[1]
-      const newY = MathUtils.lerp(instanceRef.current.position.y, targetY, 0.3)
+      const isPressed = (performance.now() - pressedAt.current) / 1000 < pressDuration
+      const depth = isPressed ? pressDepth : isHovered ? hoverDepth : 0
+      const newY = MathUtils.damp(instanceRef.current.position.y, position[1] - depth, 25, delta)
       instanceRef.current.position.setY(newY)
     }
   })
@@ -33,10 +39,15 @@ export const Pad = ({ position }: { position: [number, number, number] }) => {
     <Instance
       ref={instanceRef}
       position={position}
-      onPointerOver={() => setIsHovered(true)}
-      onPointerOut={() => setIsHovered(false)}
-      onClick={playRandomSound}
-      // scale={isPlaying ? 0.9 : 1}
+      onPointerOver={(e) => {
+        e.stopPropagation()
+        setIsHovered(true)
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation()
+        setIsHovered(false)
+      }}
+      onClick={playSound}
     />
   )
 }

@@ -23,7 +23,7 @@ export function Pads({ nodes, boxPositions }: PadsProps) {
     >
       <meshPhysicalMaterial color="#C4B8A8" />
       {boxPositions.map((position, index) => (
-        <Pad key={index} position={position} />
+        <Pad key={index} index={index} position={position} />
       ))}
     </Instances>
   )
